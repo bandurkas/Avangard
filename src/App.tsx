@@ -49,6 +49,11 @@ interface Driver {
   status: string; // "ACTIVE" | "FREE" | "OFF"
   permitCategories?: string[];
   activeRate?: number;
+  birthDate?: string;
+  experienceYears?: number;
+  licenseCategories?: string;
+  medCertificateExpiry?: string;
+  specialPermits?: string;
   documents?: { name: string; type: string; file: string }[];
   rateHistory?: { date: string; rate: number; reason: string }[];
 }
@@ -60,6 +65,14 @@ interface Vehicle {
   vin: string;
   status: string; // "ACTIVE" | "MAINTENANCE" | "OUT_OF_SERVICE"
   machineryType?: string;
+  yearOfManufacture?: number;
+  fuelConsumptionNominal?: number;
+  carryingCapacity?: number;
+  boomLength?: number;
+  enginePower?: number;
+  lastServiceDate?: string;
+  insuranceNumber?: string;
+  ptnNumber?: string;
   documents?: { name: string; type: string; file: string }[];
 }
 
@@ -148,11 +161,40 @@ function MainApp() {
   // CRUD Modals State
   const [driverModalOpen, setDriverModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
-  const [driverForm, setDriverForm] = useState({ name: "", licenseNumber: "", phone: "", status: "FREE" });
+  const [activeViewDoc, setActiveViewDoc] = useState<{ name: string; file: string; type?: string } | null>(null);
+  const [attachmentWizardOpen, setAttachmentWizardOpen] = useState(false);
+  const [attachmentTarget, setAttachmentTarget] = useState<{ type: "driver" | "vehicle"; id: string } | null>(null);
+  const [attachmentForm, setAttachmentForm] = useState({ name: "", type: "СТС", file: "" });
+
+  const [driverForm, setDriverForm] = useState({ 
+    name: "", 
+    licenseNumber: "", 
+    phone: "", 
+    status: "FREE",
+    birthDate: "",
+    experienceYears: "",
+    licenseCategories: "B, C",
+    medCertificateExpiry: "",
+    specialPermits: ""
+  });
 
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [vehicleForm, setVehicleForm] = useState({ model: "", plateNumber: "", vin: "", status: "ACTIVE", machineryType: "Гусеничный экскаватор" });
+  const [vehicleForm, setVehicleForm] = useState({ 
+    model: "", 
+    plateNumber: "", 
+    vin: "", 
+    status: "ACTIVE", 
+    machineryType: "Гусеничный экскаватор",
+    yearOfManufacture: "",
+    fuelConsumptionNominal: "",
+    carryingCapacity: "",
+    boomLength: "",
+    enginePower: "",
+    lastServiceDate: "",
+    insuranceNumber: "",
+    ptnNumber: ""
+  });
 
   const [objectModalOpen, setObjectModalOpen] = useState(false);
   const [objectForm, setObjectForm] = useState({ name: "", latitude: 42.87, longitude: 74.56, difficultyType: "PLAIN" as "PLAIN" | "MOUNTAIN" });
@@ -507,11 +549,15 @@ function MainApp() {
   // Form Submits
   const handleDriverSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      ...driverForm,
+      experienceYears: driverForm.experienceYears ? Number(driverForm.experienceYears) : undefined
+    };
     if (editingDriver) {
-      updateDriverMutation.mutate({ id: editingDriver.id, data: driverForm });
+      updateDriverMutation.mutate({ id: editingDriver.id, data: payload });
       showNotification("Профиль сотрудника обновлен!", "success");
     } else {
-      createDriverMutation.mutate(driverForm);
+      createDriverMutation.mutate(payload);
       showNotification("Сотрудник добавлен в штат!", "success");
     }
     setDriverModalOpen(false);
@@ -519,11 +565,19 @@ function MainApp() {
 
   const handleVehicleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      ...vehicleForm,
+      yearOfManufacture: vehicleForm.yearOfManufacture ? Number(vehicleForm.yearOfManufacture) : undefined,
+      fuelConsumptionNominal: vehicleForm.fuelConsumptionNominal ? Number(vehicleForm.fuelConsumptionNominal) : undefined,
+      carryingCapacity: vehicleForm.carryingCapacity ? Number(vehicleForm.carryingCapacity) : undefined,
+      boomLength: vehicleForm.boomLength ? Number(vehicleForm.boomLength) : undefined,
+      enginePower: vehicleForm.enginePower ? Number(vehicleForm.enginePower) : undefined
+    };
     if (editingVehicle) {
-      updateVehicleMutation.mutate({ id: editingVehicle.id, data: vehicleForm });
+      updateVehicleMutation.mutate({ id: editingVehicle.id, data: payload });
       showNotification("Карточка спецтехники обновлена!", "success");
     } else {
-      createVehicleMutation.mutate(vehicleForm);
+      createVehicleMutation.mutate(payload);
       showNotification("Спецтехника поставлена на баланс!", "success");
     }
     setVehicleModalOpen(false);
@@ -551,6 +605,50 @@ function MainApp() {
       newRate: Number(orderForm.newRate)
     });
     setOrderModalOpen(false);
+  };
+
+  const handleAttachmentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!attachmentTarget) return;
+
+    const mockFile = attachmentForm.file || (attachmentForm.name.toLowerCase().replace(/[^a-zа-я0-9]/g, '_') + "_" + Date.now().toString().slice(-4) + ".pdf");
+    const newDoc = {
+      name: attachmentForm.name,
+      type: attachmentForm.type,
+      file: mockFile
+    };
+
+    if (attachmentTarget.type === "driver") {
+      const driverObj = drivers.find(d => d.id === attachmentTarget.id);
+      if (driverObj) {
+        const updatedDocs = [...(driverObj.documents || []), newDoc];
+        updateDriverMutation.mutate({
+          id: driverObj.id,
+          data: { documents: updatedDocs }
+        }, {
+          onSuccess: () => {
+            setSelectedDriver(prev => prev ? { ...prev, documents: updatedDocs } : null);
+            showNotification("Документ успешно прикреплен к профилю сотрудника!", "success");
+          }
+        });
+      }
+    } else if (attachmentTarget.type === "vehicle") {
+      const vehicleObj = vehicles.find(v => v.id === attachmentTarget.id);
+      if (vehicleObj) {
+        const updatedDocs = [...(vehicleObj.documents || []), newDoc];
+        updateVehicleMutation.mutate({
+          id: vehicleObj.id,
+          data: { documents: updatedDocs }
+        }, {
+          onSuccess: () => {
+            setSelectedVehicle(prev => prev ? { ...prev, documents: updatedDocs } : null);
+            showNotification("Документ успешно прикреплен к спецтехнике!", "success");
+          }
+        });
+      }
+    }
+
+    setAttachmentWizardOpen(false);
   };
 
   // V2: Simulated payment handler
@@ -616,11 +714,35 @@ function MainApp() {
                 onClick={() => {
                   if (activeTab === "drivers") {
                     setEditingDriver(null);
-                    setDriverForm({ name: "", licenseNumber: "", phone: "", status: "FREE" });
+                    setDriverForm({ 
+                      name: "", 
+                      licenseNumber: "", 
+                      phone: "", 
+                      status: "FREE",
+                      birthDate: "",
+                      experienceYears: "",
+                      licenseCategories: "B, C",
+                      medCertificateExpiry: "",
+                      specialPermits: ""
+                    });
                     setDriverModalOpen(true);
                   } else if (activeTab === "vehicles") {
                     setEditingVehicle(null);
-                    setVehicleForm({ model: "", plateNumber: "", vin: "", status: "ACTIVE", machineryType: "Гусеничный экскаватор" });
+                    setVehicleForm({ 
+                      model: "", 
+                      plateNumber: "", 
+                      vin: "", 
+                      status: "ACTIVE", 
+                      machineryType: "Гусеничный экскаватор",
+                      yearOfManufacture: "",
+                      fuelConsumptionNominal: "",
+                      carryingCapacity: "",
+                      boomLength: "",
+                      enginePower: "",
+                      lastServiceDate: "",
+                      insuranceNumber: "",
+                      ptnNumber: ""
+                    });
                     setVehicleModalOpen(true);
                   } else if (activeTab === "objects") {
                     setObjectForm({ name: "", latitude: 42.87, longitude: 74.56, difficultyType: "PLAIN" });
@@ -664,7 +786,7 @@ function MainApp() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Машинисты и Допуски
+            Сотрудники
           </button>
           <button
             onClick={() => setActiveTab("vehicles")}
@@ -1119,7 +1241,17 @@ function MainApp() {
                               <button 
                                 onClick={() => {
                                   setEditingDriver(d);
-                                  setDriverForm({ name: d.name, licenseNumber: d.licenseNumber, phone: d.phone, status: d.status });
+                                  setDriverForm({ 
+                                    name: d.name, 
+                                    licenseNumber: d.licenseNumber, 
+                                    phone: d.phone, 
+                                    status: d.status,
+                                    birthDate: d.birthDate || "",
+                                    experienceYears: d.experienceYears ? String(d.experienceYears) : "",
+                                    licenseCategories: d.licenseCategories || "B, C",
+                                    medCertificateExpiry: d.medCertificateExpiry || "",
+                                    specialPermits: d.specialPermits || ""
+                                  });
                                   setDriverModalOpen(true);
                                 }}
                                 className="p-2 text-slate-400 hover:text-[#38a6e4] hover:bg-[#0c1e43] transition-colors rounded-full cursor-pointer"
@@ -1231,7 +1363,21 @@ function MainApp() {
                               <button 
                                 onClick={() => {
                                   setEditingVehicle(v);
-                                  setVehicleForm({ model: v.model, plateNumber: v.plateNumber, vin: v.vin, status: v.status, machineryType: v.machineryType || "Гусеничный экскаватор" });
+                                  setVehicleForm({ 
+                                    model: v.model, 
+                                    plateNumber: v.plateNumber, 
+                                    vin: v.vin, 
+                                    status: v.status, 
+                                    machineryType: v.machineryType || "Гусеничный экскаватор",
+                                    yearOfManufacture: v.yearOfManufacture ? String(v.yearOfManufacture) : "",
+                                    fuelConsumptionNominal: v.fuelConsumptionNominal ? String(v.fuelConsumptionNominal) : "",
+                                    carryingCapacity: v.carryingCapacity ? String(v.carryingCapacity) : "",
+                                    boomLength: v.boomLength ? String(v.boomLength) : "",
+                                    enginePower: v.enginePower ? String(v.enginePower) : "",
+                                    lastServiceDate: v.lastServiceDate || "",
+                                    insuranceNumber: v.insuranceNumber || "",
+                                    ptnNumber: v.ptnNumber || ""
+                                  });
                                   setVehicleModalOpen(true);
                                 }}
                                 className="p-2 text-slate-400 hover:text-[#38a6e4] hover:bg-[#0c1e43] transition-colors rounded-full cursor-pointer"
@@ -1889,55 +2035,105 @@ function MainApp() {
       {/* Driver Modal */}
       {driverModalOpen && (
         <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-2xl w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">
-              {editingDriver ? "Редактировать сотрудника" : "Нанять машиниста в штат"}
+              {editingDriver ? "Редактировать сотрудника" : "Нанять сотрудника в штат"}
             </h3>
             <form onSubmit={handleDriverSubmit} className="space-y-4 text-xs font-bold">
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">ФИО Водителя / Машиниста</label>
-                <input
-                  required
-                  type="text"
-                  value={driverForm.name}
-                  onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
-                  placeholder="Алексей Петров"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Номер удостоверения (ВУ тракториста)</label>
-                <input
-                  required
-                  type="text"
-                  value={driverForm.licenseNumber}
-                  onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
-                  placeholder="KG 88 AA 9999"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Номер телефона</label>
-                <input
-                  required
-                  type="text"
-                  value={driverForm.phone}
-                  onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
-                  placeholder="+996 (555) 12-34-56"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Текущий статус смены</label>
-                <select
-                  value={driverForm.status}
-                  onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
-                >
-                  <option value="FREE">Свободен</option>
-                  <option value="ACTIVE">На смене</option>
-                  <option value="OFF">Вне смены</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">ФИО Сотрудника</label>
+                  <input
+                    required
+                    type="text"
+                    value={driverForm.name}
+                    onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
+                    placeholder="Алексей Петров"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Номер телефона</label>
+                  <input
+                    required
+                    type="text"
+                    value={driverForm.phone}
+                    onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
+                    placeholder="+996 (555) 12-34-56"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Номер ВУ / удостоверения</label>
+                  <input
+                    required
+                    type="text"
+                    value={driverForm.licenseNumber}
+                    onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
+                    placeholder="KG 88 AA 9999"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Категории прав</label>
+                  <input
+                    type="text"
+                    value={driverForm.licenseCategories}
+                    onChange={(e) => setDriverForm({ ...driverForm, licenseCategories: e.target.value })}
+                    placeholder="B, C, D, E"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Дата рождения</label>
+                  <input
+                    type="date"
+                    value={driverForm.birthDate}
+                    onChange={(e) => setDriverForm({ ...driverForm, birthDate: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Стаж работы (полных лет)</label>
+                  <input
+                    type="number"
+                    value={driverForm.experienceYears}
+                    onChange={(e) => setDriverForm({ ...driverForm, experienceYears: e.target.value })}
+                    placeholder="8"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Срок действия мед. справки</label>
+                  <input
+                    type="date"
+                    value={driverForm.medCertificateExpiry}
+                    onChange={(e) => setDriverForm({ ...driverForm, medCertificateExpiry: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Текущий статус смены</label>
+                  <select
+                    value={driverForm.status}
+                    onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
+                  >
+                    <option value="FREE">Свободен</option>
+                    <option value="ACTIVE">На смене</option>
+                    <option value="OFF">Вне смены</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 mb-1 font-bold">Специальные допуски и квалификации</label>
+                  <input
+                    type="text"
+                    value={driverForm.specialPermits}
+                    onChange={(e) => setDriverForm({ ...driverForm, specialPermits: e.target.value })}
+                    placeholder="e.g. Допуск на автокраны Liebherr, Работы в горных секторах"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -1962,68 +2158,150 @@ function MainApp() {
       {/* Vehicle Modal */}
       {vehicleModalOpen && (
         <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-2xl w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">
               {editingVehicle ? "Редактировать спецтехнику" : "Поставить спецтехнику на баланс"}
             </h3>
             <form onSubmit={handleVehicleSubmit} className="space-y-4 text-xs font-bold">
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Марка и Модель спецтехники</label>
-                <input
-                  required
-                  type="text"
-                  value={vehicleForm.model}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
-                  placeholder="Экскаватор CAT 320"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Классификация машины</label>
-                <select
-                  value={vehicleForm.machineryType}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, machineryType: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
-                >
-                  <option value="Гусеничный экскаватор">Гусеничный экскаватор</option>
-                  <option value="Тяжелый кран">Тяжелый кран</option>
-                  <option value="Тяжелый бульдозер">Тяжелый бульдозер</option>
-                  <option value="Фронтальный погрузчик">Фронтальный погрузчик</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Государственный номер</label>
-                <input
-                  required
-                  type="text"
-                  value={vehicleForm.plateNumber}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
-                  placeholder="KG 555 ABD"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">VIN код техники</label>
-                <input
-                  required
-                  type="text"
-                  value={vehicleForm.vin}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, vin: e.target.value })}
-                  placeholder="CAT320E999XYZ0001"
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-300 mb-1 font-bold">Статус техники</label>
-                <select
-                  value={vehicleForm.status}
-                  onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
-                >
-                  <option value="ACTIVE">Активен</option>
-                  <option value="MAINTENANCE">В ремонте</option>
-                  <option value="OUT_OF_SERVICE">Списан</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Марка и Модель спецтехники</label>
+                  <input
+                    required
+                    type="text"
+                    value={vehicleForm.model}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
+                    placeholder="Экскаватор CAT 320"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Классификация машины</label>
+                  <select
+                    value={vehicleForm.machineryType}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, machineryType: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
+                  >
+                    <option value="Гусеничный экскаватор">Гусеничный экскаватор</option>
+                    <option value="Тяжелый кран">Тяжелый кран</option>
+                    <option value="Тяжелый бульдозер">Тяжелый бульдозер</option>
+                    <option value="Фронтальный погрузчик">Фронтальный погрузчик</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Государственный номер</label>
+                  <input
+                    required
+                    type="text"
+                    value={vehicleForm.plateNumber}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
+                    placeholder="KG 555 ABD"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">VIN код техники</label>
+                  <input
+                    required
+                    type="text"
+                    value={vehicleForm.vin}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, vin: e.target.value })}
+                    placeholder="CAT320E999XYZ0001"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Год выпуска</label>
+                  <input
+                    type="number"
+                    value={vehicleForm.yearOfManufacture}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, yearOfManufacture: e.target.value })}
+                    placeholder="2021"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Номинальный расход топлива (л/ч)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={vehicleForm.fuelConsumptionNominal}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, fuelConsumptionNominal: e.target.value })}
+                    placeholder="28.5"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Мощность двигателя (л.с.)</label>
+                  <input
+                    type="number"
+                    value={vehicleForm.enginePower}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, enginePower: e.target.value })}
+                    placeholder="168"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Грузоподъемность (т, необязательно)</label>
+                  <input
+                    type="number"
+                    value={vehicleForm.carryingCapacity}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, carryingCapacity: e.target.value })}
+                    placeholder="22"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Вылет стрелы (м, для автокранов)</label>
+                  <input
+                    type="number"
+                    value={vehicleForm.boomLength}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, boomLength: e.target.value })}
+                    placeholder="40"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Полис ОСАГО</label>
+                  <input
+                    type="text"
+                    value={vehicleForm.insuranceNumber}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, insuranceNumber: e.target.value })}
+                    placeholder="ОСАГО №11223344"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Регистрационный номер ПТС</label>
+                  <input
+                    type="text"
+                    value={vehicleForm.ptnNumber}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, ptnNumber: e.target.value })}
+                    placeholder="ПТС №77 КГ 90881"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Дата последнего ТО</label>
+                  <input
+                    type="date"
+                    value={vehicleForm.lastServiceDate}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, lastServiceDate: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-300 mb-1 font-bold">Статус техники</label>
+                  <select
+                    value={vehicleForm.status}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
+                  >
+                    <option value="ACTIVE">Активен</option>
+                    <option value="MAINTENANCE">В ремонте</option>
+                    <option value="OUT_OF_SERVICE">Списан</option>
+                  </select>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -2256,7 +2534,19 @@ function MainApp() {
                 
                 {/* Documents list manager */}
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Документы Спецтехники (СТС/ПТС)</h4>
+                  <div className="flex justify-between items-center pl-1">
+                    <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider">Документы Спецтехники (СТС/ПТС)</h4>
+                    <button
+                      onClick={() => {
+                        setAttachmentTarget({ type: "vehicle", id: selectedVehicle.id });
+                        setAttachmentForm({ name: "", type: "СТС", file: "" });
+                        setAttachmentWizardOpen(true);
+                      }}
+                      className="px-2 py-0.5 bg-[#38a6e4]/10 hover:bg-[#38a6e4]/20 text-[#38a6e4] border border-[#38a6e4]/20 rounded text-[9px] font-black uppercase tracking-wider cursor-pointer"
+                    >
+                      Прикрепить
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedVehicle.documents?.map((doc, idx) => (
                       <div key={idx} className="p-3 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between hover:border-[#38a6e4]/40 transition-colors">
@@ -2267,7 +2557,7 @@ function MainApp() {
                             <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
                           </div>
                         </div>
-                        <button className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline">Скачать PDF</button>
+                        <button onClick={() => setActiveViewDoc(doc)} className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline cursor-pointer">Просмотр</button>
                       </div>
                     ))}
                   </div>
@@ -2319,6 +2609,50 @@ function MainApp() {
                     <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Скорость</span>
                       <span className="text-sm font-extrabold text-white block tabular-nums">{speed} км/ч</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Extended Profile Fields */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Технические характеристики и ОСАГО</h4>
+                  <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl text-xs">
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Год выпуска</span>
+                      <span className="font-extrabold text-white">{selectedVehicle.yearOfManufacture || "2021"} г.</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Ном. расход топлива</span>
+                      <span className="font-extrabold text-white">{selectedVehicle.fuelConsumptionNominal || "28.5"} л/ч</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Мощность двигателя</span>
+                      <span className="font-extrabold text-white">{selectedVehicle.enginePower || "168"} л.с.</span>
+                    </div>
+                    {selectedVehicle.carryingCapacity ? (
+                      <div>
+                        <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Грузоподъемность</span>
+                        <span className="font-extrabold text-white">{selectedVehicle.carryingCapacity} т</span>
+                      </div>
+                    ) : null}
+                    {selectedVehicle.boomLength ? (
+                      <div>
+                        <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Вылет стрелы</span>
+                        <span className="font-extrabold text-white">{selectedVehicle.boomLength} м</span>
+                      </div>
+                    ) : null}
+                    <div className="col-span-2 border-t border-[#00417d]/20 my-1"></div>
+                    <div className="col-span-2">
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Полис ОСАГО</span>
+                      <span className="font-extrabold text-[#eab308] font-mono">{selectedVehicle.insuranceNumber || "ОСАГО №11223344"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Регистрационный номер ПТС</span>
+                      <span className="font-extrabold text-white font-mono">{selectedVehicle.ptnNumber || "ПТС №77 КГ 90881"}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Дата последнего ТО</span>
+                      <span className="font-extrabold text-white font-mono">{selectedVehicle.lastServiceDate || "2026-04-10"}</span>
                     </div>
                   </div>
                 </div>
@@ -2383,9 +2717,53 @@ function MainApp() {
                   </div>
                 </div>
 
+                {/* Extended Employee Profile Fields */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Личное дело сотрудника</h4>
+                  <div className="grid grid-cols-2 gap-2.5 p-3.5 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl text-xs">
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Дата рождения</span>
+                      <span className="font-extrabold text-white">{selectedDriver.birthDate || "1988-06-12"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Стаж работы</span>
+                      <span className="font-extrabold text-white">{selectedDriver.experienceYears || "8"} лет</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Категории прав</span>
+                      <span className="font-extrabold text-[#38a6e4] font-mono">{selectedDriver.licenseCategories || "B, C"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Срок действия мед. справки</span>
+                      <span className="font-extrabold text-white font-mono">{selectedDriver.medCertificateExpiry || "2027-10-15"}</span>
+                    </div>
+                    <div className="col-span-2 border-t border-[#00417d]/20 my-1"></div>
+                    <div className="col-span-2">
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Контакты телефона</span>
+                      <span className="font-extrabold text-white font-mono">{selectedDriver.phone}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider">Специальные допуски и разрешения</span>
+                      <span className="font-extrabold text-[#eab308]">{selectedDriver.specialPermits || "Стандартные допуски строительной спецтехники"}</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Driver Document Manger */}
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Личные Документы машиниста</h4>
+                  <div className="flex justify-between items-center pl-1">
+                    <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider">Личные Документы сотрудника</h4>
+                    <button
+                      onClick={() => {
+                        setAttachmentTarget({ type: "driver", id: selectedDriver.id });
+                        setAttachmentForm({ name: "", type: "Водительское Удостоверение", file: "" });
+                        setAttachmentWizardOpen(true);
+                      }}
+                      className="px-2 py-0.5 bg-[#38a6e4]/10 hover:bg-[#38a6e4]/20 text-[#38a6e4] border border-[#38a6e4]/20 rounded text-[9px] font-black uppercase tracking-wider cursor-pointer"
+                    >
+                      Прикрепить
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedDriver.documents?.map((doc, idx) => (
                       <div key={idx} className="p-3 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between hover:border-[#38a6e4]/40 transition-colors">
@@ -2396,7 +2774,7 @@ function MainApp() {
                             <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
                           </div>
                         </div>
-                        <button className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline">Просмотр</button>
+                        <button onClick={() => setActiveViewDoc(doc)} className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline cursor-pointer">Просмотр</button>
                       </div>
                     ))}
                   </div>
@@ -2498,6 +2876,237 @@ function MainApp() {
           </>
         );
       })()}
+
+      {/* ATTACHMENT WIZARD MODAL */}
+      {attachmentWizardOpen && (
+        <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[130] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">
+              Прикрепить документ
+            </h3>
+            <form onSubmit={handleAttachmentSubmit} className="space-y-4 text-xs font-bold">
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Название документа</label>
+                <input
+                  required
+                  type="text"
+                  value={attachmentForm.name}
+                  onChange={(e) => setAttachmentForm({ ...attachmentForm, name: e.target.value })}
+                  placeholder="e.g. Медицинская справка о прохождении комиссии"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Тип документа</label>
+                {attachmentTarget?.type === "driver" ? (
+                  <select
+                    value={attachmentForm.type}
+                    onChange={(e) => setAttachmentForm({ ...attachmentForm, type: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
+                  >
+                    <option value="Водительское Удостоверение">Водительское Удостоверение (ВУ)</option>
+                    <option value="Медсправка">Медицинская Справка</option>
+                    <option value="Лицензия">Допуск / Лицензия</option>
+                    <option value="Другое">Другой документ</option>
+                  </select>
+                ) : (
+                  <select
+                    value={attachmentForm.type}
+                    onChange={(e) => setAttachmentForm({ ...attachmentForm, type: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
+                  >
+                    <option value="СТС">СТС спецтехники</option>
+                    <option value="ПТС">ПТС спецтехники</option>
+                    <option value="Ростехнадзор">Разрешение Ростехнадзора</option>
+                    <option value="ОСАГО">Полис ОСАГО</option>
+                    <option value="Другое">Другой документ</option>
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Имя файла (для симуляции загрузки)</label>
+                <input
+                  type="text"
+                  value={attachmentForm.file}
+                  onChange={(e) => setAttachmentForm({ ...attachmentForm, file: e.target.value })}
+                  placeholder="e.g. med_inspection_2026.pdf"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
+                />
+                <span className="text-[10px] text-slate-400 block mt-1 font-medium font-sans">Оставьте пустым для автогенерации имени файла. Система симулирует безопасную загрузку на облачное хранилище.</span>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAttachmentWizardOpen(false)}
+                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Прикрепить
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DOCUMENT PREVIEWER POPUP MODAL */}
+      {activeViewDoc && (
+        <div className="fixed inset-0 bg-[#00091b]/80 backdrop-blur-md z-[140] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/95 rounded-2xl border border-[#00417d]/40 max-w-2xl w-full shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#38a6e4]" />
+                <div>
+                  <h4 className="font-extrabold text-sm text-white">{activeViewDoc.name}</h4>
+                  <span className="text-[10px] text-slate-400 block font-mono">{activeViewDoc.file}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveViewDoc(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto bg-slate-900/60 flex-grow flex items-center justify-center min-h-[350px]">
+              {activeViewDoc.file.toLowerCase().endsWith(".png") || 
+               activeViewDoc.file.toLowerCase().endsWith(".jpg") || 
+               activeViewDoc.file.toLowerCase().endsWith(".jpeg") || 
+               activeViewDoc.type === "Изображение" ? (
+                <div className="relative group max-w-md w-full border-2 border-[#00417d]/20 rounded-xl overflow-hidden bg-slate-800 p-4 shadow-xl">
+                  <div className="w-full aspect-[1.6] bg-gradient-to-br from-[#0c1e43] to-[#00091b] rounded-xl p-4 border border-[#38a6e4]/30 relative flex flex-col justify-between text-white overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#38a6e4]/5 rounded-full blur-2xl"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#eab308]/5 rounded-full blur-2xl"></div>
+                    
+                    <div className="flex justify-between items-start border-b border-[#3b82f6]/20 pb-2">
+                      <div>
+                        <span className="block text-[8px] font-black tracking-widest text-[#38a6e4] uppercase">Кыргызская Республика</span>
+                        <span className="block text-xs font-black uppercase tracking-tight">Водительское Удостоверение</span>
+                      </div>
+                      <span className="text-[9px] font-black font-mono text-[#eab308]">KG 777 BSB</span>
+                    </div>
+
+                    <div className="flex gap-4 items-center my-auto">
+                      <div className="w-16 h-20 rounded-lg border border-[#38a6e4]/20 bg-[#00091b] flex flex-col items-center justify-center shrink-0 relative overflow-hidden">
+                        <Users className="w-8 h-8 text-[#38a6e4]/40" />
+                        <span className="absolute bottom-1 text-[7px] font-bold text-center text-[#38a6e4] w-full uppercase font-mono bg-[#38a6e4]/10">PHOTO</span>
+                      </div>
+                      <div className="space-y-1 text-[10px]">
+                        <div>
+                          <span className="text-[8px] text-[#64748b] block font-bold uppercase">ФИО / Full Name</span>
+                          <span className="font-extrabold uppercase text-white block">{activeViewDoc.name.includes("машинист") || activeViewDoc.name.includes("удостоверение") ? "ИВАНОВ ИВАН ИВАНОВИЧ" : "СМИРНОВ СЕРГЕЙ СЕРГЕЕВИЧ"}</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                          <div>
+                            <span className="text-[7px] text-[#64748b] block font-bold uppercase">Категории</span>
+                            <span className="font-bold font-mono block text-[#38a6e4]">B, C, D, E, F</span>
+                          </div>
+                          <div>
+                            <span className="text-[7px] text-[#64748b] block font-bold uppercase">Срок действия</span>
+                            <span className="font-bold font-mono block">31.12.2030</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-[7px] text-slate-400 pt-1 border-t border-[#3b82f6]/10 font-bold uppercase">
+                      <span>Департамент регистрации ТС</span>
+                      <span className="text-[#eab308]">Лицензия действительна</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-xl w-full bg-white text-slate-800 rounded-xl p-8 shadow-2xl relative border-4 border-slate-200 min-h-[500px] flex flex-col justify-between font-sans">
+                  <div className="absolute top-4 left-4 right-4 bottom-4 border border-dashed border-slate-300 pointer-events-none"></div>
+
+                  <div className="flex justify-between items-center border-b border-slate-300 pb-4 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-8 h-8 text-[#38a6e4]" viewBox="0 0 100 100" fill="currentColor">
+                        <polygon points="50,10 12,90 40,90 50,68 60,90 88,90" fill="#00417D" />
+                        <polygon points="5,82 95,25 90,15 0,72" fill="#38a6e4" />
+                      </svg>
+                      <div>
+                        <span className="block font-black text-sm tracking-tight text-[#00417D]">AVANGARD STYLE</span>
+                        <span className="block text-[8px] uppercase tracking-widest text-[#eab308] font-black -mt-0.5">Строительная Компания</span>
+                      </div>
+                    </div>
+                    <div className="text-right text-[9px] font-bold text-slate-500 font-mono">
+                      <span>Лицензионный отдел</span><br/>
+                      <span>г. Бишкек, ул. Токтогула 125/1</span>
+                    </div>
+                  </div>
+
+                  <div className="text-center my-6 relative z-10">
+                    <h5 className="font-black uppercase tracking-wider text-[#00417D] text-sm">{activeViewDoc.name}</h5>
+                    <span className="text-[10px] font-mono text-slate-500 block mt-1 font-bold">СЕРТИФИКАТ ВЕРИФИКАЦИИ № AS-{Math.floor(100000 + Math.random() * 900000)}</span>
+                  </div>
+
+                  <div className="text-xs space-y-4 relative z-10 flex-grow py-4 text-slate-700 font-semibold">
+                    <p className="leading-relaxed">
+                      Настоящим подтверждается, что данный документ зарегистрирован в едином реестре логистического и технического контроля спецтехники ОсОО «Авангард Стиль». Документ является действительным, прошёл все проверки на соответствие нормам безопасности труда и квалификации персонала.
+                    </p>
+                    
+                    <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                      <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                        <div className="p-2.5 bg-slate-100/50 font-bold text-slate-500 uppercase text-[9px]">Параметр документа</div>
+                        <div className="p-2.5 bg-slate-100/50 font-bold text-slate-500 uppercase text-[9px]">Значение реестра</div>
+                      </div>
+                      <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                        <div className="p-2.5 font-bold">Идентификатор файла</div>
+                        <div className="p-2.5 font-mono text-[10px]">{activeViewDoc.file}</div>
+                      </div>
+                      <div className="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                        <div className="p-2.5 font-bold">Классификационный тип</div>
+                        <div className="p-2.5">{activeViewDoc.type || "СТС / Лицензионное Свидетельство"}</div>
+                      </div>
+                      <div className="grid grid-cols-2 divide-x divide-slate-200">
+                        <div className="p-2.5 font-bold">Дата верификации</div>
+                        <div className="p-2.5 font-mono">{new Date().toLocaleDateString("ru-RU")}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-end border-t border-slate-200 pt-6 mt-4 relative z-10">
+                    <div className="text-[10px]">
+                      <span className="block text-[8px] text-slate-500 uppercase font-bold">Ответственный орган</span>
+                      <span className="font-extrabold text-[#00417D]">ОсОО «Авангард Стиль»</span>
+                    </div>
+
+                    <div className="absolute right-28 bottom-4 w-20 h-20 border-4 border-blue-500/30 rounded-full flex flex-col items-center justify-center text-[7px] font-black text-blue-500/40 uppercase rotate-12 pointer-events-none select-none tracking-tighter">
+                      <div className="border border-dashed border-blue-500/20 w-[64px] h-[64px] rounded-full flex flex-col items-center justify-center text-center leading-none p-1">
+                        <span>АВАНГАРД СТИЛЬ</span>
+                        <span className="font-bold my-1 text-[5px] border-y border-blue-500/20 py-0.5">ОТДЕЛ КАДРОВ</span>
+                        <span>БИШКЕК 2026</span>
+                      </div>
+                    </div>
+
+                    <div className="text-right text-[10px] shrink-0 font-bold font-sans">
+                      <span className="block text-[8px] text-slate-500 uppercase">Генеральный директор</span>
+                      <span className="italic font-extrabold text-[#00417D] tracking-tight pr-2">Шеф-Инженер К.С. Асылбеков</span>
+                      <span className="block text-[8px] text-slate-400 font-mono">Подписано ЭЦП AS-99</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/50 flex justify-end gap-2.5">
+              <button 
+                onClick={() => setActiveViewDoc(null)}
+                className="h-10 px-6 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

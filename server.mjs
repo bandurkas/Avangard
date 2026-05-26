@@ -14,6 +14,11 @@ let drivers = [
     status: "FREE",
     permitCategories: ["Гусеничный экскаватор", "Фронтальный погрузчик"],
     activeRate: 800,
+    birthDate: "1985-04-12",
+    experienceYears: 10,
+    licenseCategories: "B, C, E",
+    medCertificateExpiry: "2027-11-20",
+    specialPermits: "Работа в горных условиях, Допуск на экскаваторы CAT",
     documents: [
       { name: "Удостоверение тракториста-машиниста", type: "ВУ", file: "traktorist_d1.pdf" },
       { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d1.pdf" }
@@ -31,6 +36,11 @@ let drivers = [
     status: "ACTIVE",
     permitCategories: ["Кран стреловой Liebherr", "Тяжелый бульдозер"],
     activeRate: 850,
+    birthDate: "1981-08-22",
+    experienceYears: 15,
+    licenseCategories: "B, C, D, E",
+    medCertificateExpiry: "2027-04-10",
+    specialPermits: "Допуск на автокраны Liebherr, Монтажные работы высокой сложности",
     documents: [
       { name: "Допуск машиниста крана Liebherr", type: "Лицензия", file: "crane_d2.pdf" },
       { name: "Действующая медсправка", type: "Медсправка", file: "med_d2.pdf" }
@@ -50,6 +60,14 @@ let vehicles = [
     vin: "CAT320E999XYZ0001", 
     status: "ACTIVE",
     machineryType: "Гусеничный экскаватор",
+    yearOfManufacture: 2021,
+    fuelConsumptionNominal: 28.5,
+    carryingCapacity: 22,
+    boomLength: 0,
+    enginePower: 168,
+    lastServiceDate: "2026-04-10",
+    insuranceNumber: "ОСАГО №11223344",
+    ptnNumber: "ПТС №77 КГ 90881",
     documents: [
       { name: "СТС спецтехники", type: "СТС", file: "sts_v1.pdf" },
       { name: "ПТС спецтехники", type: "ПТС", file: "pts_v1.pdf" }
@@ -62,6 +80,14 @@ let vehicles = [
     vin: "LBH1050TM888ABC12", 
     status: "ACTIVE",
     machineryType: "Тяжелый кран",
+    yearOfManufacture: 2023,
+    fuelConsumptionNominal: 42.0,
+    carryingCapacity: 50,
+    boomLength: 40,
+    enginePower: 367,
+    lastServiceDate: "2026-05-12",
+    insuranceNumber: "ОСАГО №99887766",
+    ptnNumber: "ПТС №88 КГ 11223",
     documents: [
       { name: "СТС автокрана", type: "СТС", file: "sts_v3.pdf" },
       { name: "ПТС автокрана", type: "ПТС", file: "pts_v3.pdf" },
@@ -75,6 +101,14 @@ let vehicles = [
     vin: "SHTSD16X777BULK01", 
     status: "MAINTENANCE",
     machineryType: "Тяжелый бульдозер",
+    yearOfManufacture: 2020,
+    fuelConsumptionNominal: 30.2,
+    carryingCapacity: 17,
+    boomLength: 0,
+    enginePower: 160,
+    lastServiceDate: "2026-03-25",
+    insuranceNumber: "ОСАГО №55667788",
+    ptnNumber: "ПТС №55 КГ 66778",
     documents: [
       { name: "СТС бульдозера", type: "СТС", file: "sts_v4.pdf" },
       { name: "ПТС бульдозера", type: "ПТС", file: "pts_v4.pdf" }
