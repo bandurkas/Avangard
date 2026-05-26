@@ -17,7 +17,6 @@ import {
   Fuel, 
   Wrench, 
   TrendingUp, 
-  Download, 
   Navigation,
   RefreshCw,
   Info,
@@ -26,20 +25,20 @@ import {
   X,
   Clock,
   Activity,
-  ShieldAlert
+  FileText,
+  AlertTriangle,
+  FileSignature,
+  CheckCircle,
+  Map
 } from "lucide-react";
 
-// Preset GPS routing path for simulator progression
+// Preset GPS routing path centered around Bishkek and mountainous areas
 const GEOLOCATION_PATH = [
-  { lat: 55.7558, lng: 37.6173, label: "Депо А, Главное" },
-  { lat: 55.7610, lng: 37.6205, label: "Трасса М4, 10 км" },
-  { lat: 55.7675, lng: 37.6258, label: "Трасса М4, 25 км" },
-  { lat: 55.7720, lng: 37.6310, label: "Трасса М4, 42 км" },
-  { lat: 55.7788, lng: 37.6365, label: "Пост ГИБДД, Южный сектор" },
-  { lat: 55.7825, lng: 37.6402, label: "Клиент 44" },
-  { lat: 55.7860, lng: 37.6448, label: "Северная промзона" },
-  { lat: 55.7915, lng: 37.6512, label: "Складской терминал B" },
-  { lat: 55.7958, lng: 37.6558, label: "Депо Б, Северный сектор" }
+  { lat: 42.8744, lng: 74.5698, label: "Депо Западное, Бишкек (База)" },
+  { lat: 42.8580, lng: 74.6050, label: "ЖК Ала-Тоо (Объект Бишкек)" },
+  { lat: 42.7500, lng: 74.4500, label: "Трасса Бишкек-Ош, Начало подъема" },
+  { lat: 42.6120, lng: 74.2380, label: "Трасса Бишкек-Ош (Горный участок, 1.35x)" },
+  { lat: 42.8150, lng: 73.8500, label: "Склад Кара-Балта (Объект)" }
 ];
 
 interface Driver {
@@ -48,6 +47,10 @@ interface Driver {
   licenseNumber: string;
   phone: string;
   status: string; // "ACTIVE" | "FREE" | "OFF"
+  permitCategories?: string[];
+  activeRate?: number;
+  documents?: { name: string; type: string; file: string }[];
+  rateHistory?: { date: string; rate: number; reason: string }[];
 }
 
 interface Vehicle {
@@ -56,112 +59,58 @@ interface Vehicle {
   plateNumber: string;
   vin: string;
   status: string; // "ACTIVE" | "MAINTENANCE" | "OUT_OF_SERVICE"
+  machineryType?: string;
+  documents?: { name: string; type: string; file: string }[];
+}
+
+interface ConstructionObject {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  difficultyType: "PLAIN" | "MOUNTAIN";
+  rateMultiplier: number;
+}
+
+interface WageDecree {
+  id: string;
+  driverId: string;
+  driverName: string;
+  orderNumber: string;
+  dateEffective: string;
+  oldRate: number;
+  newRate: number;
+  status: "PENDING" | "SIGNED";
+  signedAt?: string;
 }
 
 interface TimeLog {
   id: string;
   driverId: string;
   vehicleId: string;
-  eventType: string; // "START" | "STOP"
+  objectId?: string;
+  eventType: string; // "START" | "STOP" | "FUEL_DRAIN"
   timestamp: string;
   latitude: number;
   longitude: number;
   driverName: string;
   vehicleModel: string;
   vehiclePlate: string;
+  details?: string;
 }
 
-
-
 function MainApp() {
-  const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "vehicles" | "payroll">("overview");
-
+  const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "vehicles" | "objects" | "payroll">("overview");
   const queryClient = useQueryClient();
-
-  // Additional stats for Payroll and Vehicle Drawer
-  const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
-
-  const [driverRates, setDriverRates] = useState<Record<string, number>>({
-    d1: 800,
-    d2: 850
-  });
-
-  const [driverAdjustments, setDriverAdjustments] = useState<Record<string, number>>({
-    d1: 4500,
-    d2: -2100
-  });
-
-  const [driverPaidStatuses, setDriverPaidStatuses] = useState<Record<string, "PAID" | "PENDING" | "PROCESSING">>({
-    d1: "PAID",
-    d2: "PENDING"
-  });
-
-  const [driverActiveHours, setDriverActiveHours] = useState<Record<string, number>>({
-    d1: 142,
-    d2: 158
-  });
-
-  const [driverIdleHours, setDriverIdleHours] = useState<Record<string, number>>({
-    d1: 24,
-    d2: 18
-  });
-
-
-
-  // Dynamic average fuel consumption calculation for active shifts
-  const getAverageFuelConsumption = () => {
-    let totalRate = 0;
-    let count = 0;
-    
-    // Check if simulator is active
-    if (simActive) {
-      // Calculate realistic fuel rate based on current simFuel and simDistance
-      const simRate = 31.8 + Math.sin(simSeconds / 10) * 0.4;
-      totalRate += simRate;
-      count++;
-    }
-    
-    // Mock other active vehicle Sergey Smirnov driving Scania R450
-    // Scania R450 consumes ~29.5 L/100km
-    totalRate += 29.5 + Math.sin(Date.now() / 20000) * 0.2;
-    count++;
-    
-    return (totalRate / count).toFixed(1);
-  };
-
-  const getDriverRate = (id: string) => driverRates[id] || 750;
-  const getDriverAdjustment = (id: string) => driverAdjustments[id] || 0;
-  const getDriverPaidStatus = (id: string) => driverPaidStatuses[id] || "PENDING";
-  
-  const getDriverActiveHours = (id: string) => {
-    if (id === simDriverId && simActive) {
-      const liveHours = simSeconds / 3600;
-      return (driverActiveHours[id] || 0) + liveHours;
-    }
-    return driverActiveHours[id] || 0;
-  };
-  
-  const getDriverIdleHours = (id: string) => {
-    if (id === simDriverId && simActive) {
-      const liveIdle = (simSeconds * 0.2) / 3600;
-      return (driverIdleHours[id] || 0) + liveIdle;
-    }
-    return driverIdleHours[id] || 0;
-  };
-
-  const handlePayDriver = (id: string, name: string, amount: number) => {
-    setDriverPaidStatuses(prev => ({ ...prev, [id]: "PROCESSING" }));
-    setTimeout(() => {
-      setDriverPaidStatuses(prev => ({ ...prev, [id]: "PAID" }));
-      showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} ₽ водителю ${name}!`, "success");
-    }, 1200);
-  };
 
   // Core Data via React Query
   const { data: drivers = [] } = useQuery<Driver[]>({ queryKey: ['drivers'], queryFn: api.getDrivers });
   const { data: vehicles = [] } = useQuery<Vehicle[]>({ queryKey: ['vehicles'], queryFn: api.getVehicles });
+  const { data: objects = [] } = useQuery<ConstructionObject[]>({ queryKey: ['objects'], queryFn: api.getObjects });
+  const { data: orders = [] } = useQuery<WageDecree[]>({ queryKey: ['orders'], queryFn: api.getOrders });
   const { data: timeLogs = [] } = useQuery<TimeLog[]>({ queryKey: ['timeLogs'], queryFn: api.getTimeLogs });
 
+  // Mutations
   const createDriverMutation = useMutation({ mutationFn: api.createDriver, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drivers'] }) });
   const updateDriverMutation = useMutation({ mutationFn: (params: {id: string, data: any}) => api.updateDriver(params.id, params.data), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drivers'] }) });
   const deleteDriverMutation = useMutation({ mutationFn: api.deleteDriver, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['drivers'] }) });
@@ -170,25 +119,31 @@ function MainApp() {
   const updateVehicleMutation = useMutation({ mutationFn: (params: {id: string, data: any}) => api.updateVehicle(params.id, params.data), onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }) });
   const deleteVehicleMutation = useMutation({ mutationFn: api.deleteVehicle, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vehicles'] }) });
 
-  const createTimeLogMutation = useMutation({ mutationFn: api.createTimeLog, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['timeLogs'] }) });
+  const createObjectMutation = useMutation({ mutationFn: api.createObject, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['objects'] }) });
+  
+  const createOrderMutation = useMutation({ 
+    mutationFn: api.createOrder, 
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      showNotification("Приказ об изменении ставки успешно создан!", "success");
+    }
+  });
+  
+  const updateOrderMutation = useMutation({ 
+    mutationFn: (params: {id: string, data: any}) => api.updateOrder(params.id, params.data), 
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+    }
+  });
 
-  // Automatically initialize stats for newly added drivers
-  useEffect(() => {
-    drivers.forEach(d => {
-      if (driverRates[d.id] === undefined) {
-        setDriverRates(prev => ({ ...prev, [d.id]: 750 }));
-        setDriverAdjustments(prev => ({ ...prev, [d.id]: 0 }));
-        setDriverPaidStatuses(prev => ({ ...prev, [d.id]: "PENDING" }));
-        setDriverActiveHours(prev => ({ ...prev, [d.id]: 0 }));
-        setDriverIdleHours(prev => ({ ...prev, [d.id]: 0 }));
-      }
-    });
-  }, [drivers]);
+  const createTimeLogMutation = useMutation({ mutationFn: api.createTimeLog, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['timeLogs'] }) });
 
   // Search & Filter State
   const [driverSearch, setDriverSearch] = useState("");
   const [driverFilter, setDriverFilter] = useState("");
   const [vehicleSearch, setVehicleSearch] = useState("");
+  const [objectSearch, setObjectSearch] = useState("");
 
   // CRUD Modals State
   const [driverModalOpen, setDriverModalOpen] = useState(false);
@@ -197,14 +152,30 @@ function MainApp() {
 
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [vehicleForm, setVehicleForm] = useState({ model: "", plateNumber: "", vin: "", status: "ACTIVE" });
+  const [vehicleForm, setVehicleForm] = useState({ model: "", plateNumber: "", vin: "", status: "ACTIVE", machineryType: "Гусеничный экскаватор" });
+
+  const [objectModalOpen, setObjectModalOpen] = useState(false);
+  const [objectForm, setObjectForm] = useState({ name: "", latitude: 42.87, longitude: 74.56, difficultyType: "PLAIN" as "PLAIN" | "MOUNTAIN" });
+
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [orderForm, setOrderForm] = useState({ driverId: "", orderNumber: "", dateEffective: "", newRate: 800 });
+
+  // Drawers and Overlays
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedObject, setSelectedObject] = useState<ConstructionObject | null>(null);
 
   // Notification state
   const [alertMsg, setAlertMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
+  // Telemetry alerts & Fines
+  const [activeFuelDrainAlert, setActiveFuelDrainAlert] = useState<any | null>(null);
+  const [manualAdjustments, setManualAdjustments] = useState<Record<string, number>>({});
+
   // Mobile App Simulator State
   const [simDriverId, setSimDriverId] = useState("");
   const [simVehicleId, setSimVehicleId] = useState("");
+  const [simObjectId, setSimObjectId] = useState("o1");
   const [simActive, setSimActive] = useState(false);
   const [simSeconds, setSimSeconds] = useState(0);
   const [simPathIndex, setSimPathIndex] = useState(0);
@@ -212,11 +183,20 @@ function MainApp() {
   const [simStatusText, setSimStatusText] = useState("СМЕНА НЕ НАЧАТА");
   const [simFuel, setSimFuel] = useState(100);
   const [simDistance, setSimDistance] = useState(0);
+  
+  // Mobile Order Signing
+  const [showMobileSignOrder, setShowMobileSignOrder] = useState<WageDecree | null>(null);
+  const [signatureDrawn, setSignatureDrawn] = useState(false);
 
   const timerRef = useRef<any>(null);
   const pathIntervalRef = useRef<any>(null);
 
-  // Sync mobile simulator history card list when simDriverId changes
+  const showNotification = (text: string, type: "success" | "error") => {
+    setAlertMsg({ text, type });
+    setTimeout(() => setAlertMsg(null), 4000);
+  };
+
+  // Sync mobile simulator history card list
   useEffect(() => {
     if (simDriverId) {
       const driverLogs = timeLogs.filter(log => log.driverId === simDriverId);
@@ -245,153 +225,254 @@ function MainApp() {
         }
       }
       setSimHistory(history.slice(0, 3));
+
+      // Check if there is a pending rate decree order for this driver
+      const pendingOrder = orders.find(o => o.driverId === simDriverId && o.status === "PENDING");
+      if (pendingOrder) {
+        setShowMobileSignOrder(pendingOrder);
+      } else {
+        setShowMobileSignOrder(null);
+      }
     } else {
       setSimHistory([]);
+      setShowMobileSignOrder(null);
     }
-  }, [simDriverId, timeLogs]);
+  }, [simDriverId, timeLogs, orders]);
 
-  // Handle shift simulator path steps and timers
+  // Check for newly added orders while driver is active
   useEffect(() => {
-    if (simActive) {
-      setSimStatusText("СМЕНА АКТИВНА");
-      timerRef.current = setInterval(() => {
-        setSimSeconds(prev => prev + 1);
-        setSimFuel(prev => Math.max(0, prev - (0.01 + Math.random() * 0.02))); // slow burn
-      }, 1000);
-
-      pathIntervalRef.current = setInterval(() => {
-        setSimPathIndex(prev => (prev + 1) % GEOLOCATION_PATH.length);
-        setSimDistance(prev => prev + 2.5 + Math.random() * 0.5); // distance increase
-      }, 7000); 
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (pathIntervalRef.current) clearInterval(pathIntervalRef.current);
-      setSimStatusText(simSeconds > 0 ? "СМЕНА ЗАВЕРШЕНА" : "СМЕНА НЕ НАЧАТА");
+    if (simDriverId) {
+      const pendingOrder = orders.find(o => o.driverId === simDriverId && o.status === "PENDING");
+      if (pendingOrder) {
+        setShowMobileSignOrder(pendingOrder);
+      } else {
+        setShowMobileSignOrder(null);
+      }
     }
+  }, [orders, simDriverId]);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (pathIntervalRef.current) clearInterval(pathIntervalRef.current);
-    };
-  }, [simActive]);
-
-  const showNotification = (text: string, type: "success" | "error") => {
-    setAlertMsg({ text, type });
-    setTimeout(() => setAlertMsg(null), 3000);
-  };
-
-  // Driver CRUD operations
-  const handleDriverSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingDriver) {
-      updateDriverMutation.mutate({ id: editingDriver.id, data: driverForm });
-      showNotification("Водитель успешно обновлен!", "success");
-    } else {
-      createDriverMutation.mutate(driverForm);
-      showNotification("Водитель добавлен!", "success");
-    }
-    setDriverModalOpen(false);
-    setEditingDriver(null);
-    setDriverForm({ name: "", licenseNumber: "", phone: "", status: "FREE" });
-  };
-
-  const handleEditDriver = (driver: Driver) => {
-    setEditingDriver(driver);
-    setDriverForm({
-      name: driver.name,
-      licenseNumber: driver.licenseNumber,
-      phone: driver.phone,
-      status: driver.status
-    });
-    setDriverModalOpen(true);
-  };
-
-  const handleDeleteDriver = (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить водителя?")) return;
-    deleteDriverMutation.mutate(id);
-    showNotification("Водитель удален!", "success");
-  };
-
-  // Vehicle CRUD operations
-  const handleVehicleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingVehicle) {
-      updateVehicleMutation.mutate({ id: editingVehicle.id, data: vehicleForm });
-      showNotification("Транспорт обновлен!", "success");
-    } else {
-      createVehicleMutation.mutate(vehicleForm);
-      showNotification("Транспорт добавлен!", "success");
-    }
-    setVehicleModalOpen(false);
-    setEditingVehicle(null);
-    setVehicleForm({ model: "", plateNumber: "", vin: "", status: "ACTIVE" });
-  };
-
-  const handleEditVehicle = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setVehicleForm({
-      model: vehicle.model,
-      plateNumber: vehicle.plateNumber,
-      vin: vehicle.vin,
-      status: vehicle.status
-    });
-    setVehicleModalOpen(true);
-  };
-
-  const handleDeleteVehicle = (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить транспорт?")) return;
-    deleteVehicleMutation.mutate(id);
-    showNotification("Транспорт удален!", "success");
-  };
-
-  // Mobile App Shift Toggle (START/STOP)
-  const handleToggleShift = () => {
-    if (!simDriverId || !simVehicleId) {
-      showNotification("Выберите водителя и ТС в симуляторе!", "error");
+  // Handle mobile shift start/stop
+  const handleSimStartShift = () => {
+    if (!simDriverId || !simVehicleId || !simObjectId) {
+      showNotification("Выберите сотрудника, технику и объект в клиенте!", "error");
       return;
     }
 
-    const driver = drivers.find(d => d.id === simDriverId);
-    const vehicle = vehicles.find(v => v.id === simVehicleId);
-    if (!driver || !vehicle) return;
+    const driverObj = drivers.find(d => d.id === simDriverId);
+    const vehicleObj = vehicles.find(v => v.id === simVehicleId);
+    const objectObj = objects.find(o => o.id === simObjectId);
 
-    const eventType = simActive ? "STOP" : "START";
-    const currentLoc = GEOLOCATION_PATH[simPathIndex];
+    if (!driverObj || !vehicleObj || !objectObj) return;
 
-    // Vibrate feedback
-    if (navigator.vibrate) {
-      navigator.vibrate(60);
-    }
-
-    // Create New Log via Mutation
+    // Start shift mutation
     createTimeLogMutation.mutate({
       driverId: simDriverId,
       vehicleId: simVehicleId,
-      eventType,
+      objectId: simObjectId,
+      eventType: "START",
       timestamp: new Date().toISOString(),
-      latitude: currentLoc.lat,
-      longitude: currentLoc.lng,
-      driverName: driver.name,
-      vehicleModel: vehicle.model,
-      vehiclePlate: vehicle.plateNumber
+      latitude: GEOLOCATION_PATH[0].lat,
+      longitude: GEOLOCATION_PATH[0].lng,
+      driverName: driverObj.name,
+      vehicleModel: vehicleObj.model,
+      vehiclePlate: vehicleObj.plateNumber
     });
 
-    // Update driver status in DB
-    updateDriverMutation.mutate({
-      id: simDriverId,
-      data: { status: eventType === "START" ? "ACTIVE" : "FREE" }
+    // Update driver status in base
+    updateDriverMutation.mutate({ id: simDriverId, data: { status: "ACTIVE" } });
+
+    setSimActive(true);
+    setSimSeconds(0);
+    setSimDistance(0);
+    setSimFuel(100);
+    setSimPathIndex(0);
+    setSimStatusText("В РЕЙСЕ / НА СМЕНЕ");
+    showNotification("Смена спецтехники начата!", "success");
+
+    // Live timer increments
+    timerRef.current = setInterval(() => {
+      setSimSeconds(prev => prev + 1);
+    }, 1000);
+
+    // Live map progression
+    pathIntervalRef.current = setInterval(() => {
+      setSimPathIndex(prev => {
+        const next = (prev + 1) % GEOLOCATION_PATH.length;
+        // Increment distance
+        setSimDistance(d => d + 1.2 + Math.random() * 0.8);
+        // Burn fuel slowly
+        setSimFuel(f => Math.max(0, f - (0.15 + Math.random() * 0.1)));
+        return next;
+      });
+    }, 6000);
+  };
+
+  const handleSimStopShift = () => {
+    if (!simActive) return;
+
+    clearInterval(timerRef.current);
+    clearInterval(pathIntervalRef.current);
+
+    const driverObj = drivers.find(d => d.id === simDriverId);
+    const vehicleObj = vehicles.find(v => v.id === simVehicleId);
+
+    if (!driverObj || !vehicleObj) return;
+
+    // Stop shift mutation
+    createTimeLogMutation.mutate({
+      driverId: simDriverId,
+      vehicleId: simVehicleId,
+      objectId: simObjectId,
+      eventType: "STOP",
+      timestamp: new Date().toISOString(),
+      latitude: GEOLOCATION_PATH[simPathIndex].lat,
+      longitude: GEOLOCATION_PATH[simPathIndex].lng,
+      driverName: driverObj.name,
+      vehicleModel: vehicleObj.model,
+      vehiclePlate: vehicleObj.plateNumber
     });
 
+    // Calculate final hours and update baseline drivers active hours for Payroll
+    // const hoursEarned = simSeconds / 3600;
+    // const idleEarned = (simSeconds * 0.2) / 3600;
+
+    // Update local driver states (since it's a demo, we commit hours to state)
+    // In real app, it's aggregated from backend logs
+    showNotification("Смена спецтехники успешно завершена!", "success");
+
+    setSimActive(false);
+    setSimStatusText("СМЕНА ЗАВЕРШЕНА");
+    updateDriverMutation.mutate({ id: simDriverId, data: { status: "FREE" } });
+  };
+
+  // V2: Simulated Fuel Drain (#СливТоплива)
+  const handleSimulateFuelDrain = () => {
     if (!simActive) {
-      setSimActive(true);
-      setSimSeconds(0);
-      setSimFuel(100);
-      setSimDistance(0);
-      showNotification("Смена начата!", "success");
-    } else {
-      setSimActive(false);
-      showNotification("Смена завершена!", "success");
+      showNotification("Симуляция слива возможна только во время активной смены!", "error");
+      return;
     }
+    // Drop fuel instantly by 15% / 15 Litres
+    setSimFuel(prev => Math.max(0, prev - 15));
+    
+    const driverObj = drivers.find(d => d.id === simDriverId);
+    const vehicleObj = vehicles.find(v => v.id === simVehicleId);
+    const objectObj = objects.find(o => o.id === simObjectId);
+
+    // Create telemetry event on backend
+    createTimeLogMutation.mutate({
+      driverId: simDriverId,
+      vehicleId: simVehicleId,
+      objectId: simObjectId,
+      eventType: "FUEL_DRAIN",
+      timestamp: new Date().toISOString(),
+      latitude: GEOLOCATION_PATH[simPathIndex].lat,
+      longitude: GEOLOCATION_PATH[simPathIndex].lng,
+      driverName: driverObj?.name || "Машинист",
+      vehicleModel: vehicleObj?.model || "Спецтехника",
+      vehiclePlate: vehicleObj?.plateNumber || "",
+      details: "КРИТИЧЕСКИЙ УРОВЕНЬ: Резкое падение уровня топлива в баке (-15 Л)!"
+    });
+
+    // Display Alert banner in Dispatcher dashboard
+    setActiveFuelDrainAlert({
+      id: 'fd_' + Date.now(),
+      driverId: simDriverId,
+      driverName: driverObj?.name || "Иван Иванов",
+      vehicleId: simVehicleId,
+      vehicleModel: vehicleObj?.model || "Экскаватор CAT 320",
+      vehiclePlate: vehicleObj?.plateNumber || "KG 555 ABD",
+      objectName: objectObj?.name || "ЖК Ала-Тоо (Бишкек)",
+      timestamp: new Date().toLocaleTimeString("ru-RU"),
+      amount: 15,
+      resolved: false
+    });
+
+    showNotification("Внимание: Слит бак спецтехники! Передано диспетчеру.", "error");
+  };
+
+  // V2: Deduct fine for fuel drain
+  const handleApplyFuelFine = (alert: any) => {
+    // 15 Litres fuel fine: e.g. 1,800 Rubles
+    const fineAmount = 1800;
+    setManualAdjustments(prev => ({
+      ...prev,
+      [alert.driverId]: (prev[alert.driverId] || 0) - fineAmount
+    }));
+
+    setActiveFuelDrainAlert(null);
+    showNotification(`Выписан штраф ${fineAmount} ₽ водителю ${alert.driverName} за слив топлива.`, "success");
+  };
+
+  // V2: Mobile Order E-Sign
+  const handleMobileSignDecree = () => {
+    if (!showMobileSignOrder) return;
+    setSignatureDrawn(true);
+    setTimeout(() => {
+      // Update order status on backend
+      updateOrderMutation.mutate({
+        id: showMobileSignOrder.id,
+        data: {
+          status: "SIGNED",
+          signedAt: new Date().toISOString()
+        }
+      });
+      showNotification("Приказ об изменении ставки успешно подписан оператором!", "success");
+      setShowMobileSignOrder(null);
+      setSignatureDrawn(false);
+    }, 1000);
+  };
+
+  // Helper rate & hours getters with live multiplier adjustments
+  const getDriverRate = (id: string) => {
+    const d = drivers.find(drv => drv.id === id);
+    return d?.activeRate || 750;
+  };
+
+  const getDriverAdjustment = (id: string) => {
+    return manualAdjustments[id] || 0;
+  };
+
+  const getDriverActiveHours = (id: string) => {
+    // Basic mock hours + live simulated hours
+    let basicHours = 142; // Ivan Ivanov
+    if (id === "d2") basicHours = 158; // Sergey Smirnov
+    
+    if (id === simDriverId && simActive) {
+      const liveHours = simSeconds / 3600;
+      return basicHours + liveHours * 200; // speed up for visualization
+    }
+    return basicHours;
+  };
+
+  const getDriverIdleHours = (id: string) => {
+    let basicHours = 24;
+    if (id === "d2") basicHours = 18;
+
+    if (id === simDriverId && simActive) {
+      const liveIdle = (simSeconds * 0.2) / 3600;
+      return basicHours + liveIdle * 200;
+    }
+    return basicHours;
+  };
+
+  // Dynamic average fuel consumption calculation for active specialized machinery
+  const getAverageFuelConsumption = () => {
+    let totalRate = 0;
+    let count = 0;
+    
+    // Check if simulator is active
+    if (simActive) {
+      // CAT 320 consumes ~31.8 L/100km
+      const simRate = 31.8 + Math.sin(simSeconds / 10) * 0.4;
+      totalRate += simRate;
+      count++;
+    }
+    
+    // Sergey Smirnov driving Liebherr LTM 1050 (Heavy crane consumes ~36.5 L/100km)
+    totalRate += 36.5 + Math.sin(Date.now() / 20000) * 0.3;
+    count++;
+    
+    return (totalRate / count).toFixed(1);
   };
 
   const formatTimer = (totalSecs: number) => {
@@ -401,7 +482,7 @@ function MainApp() {
     return `${h}:${m}:${s}`;
   };
 
-  // Search/Filters
+  // Filter lists
   const filteredDrivers = drivers.filter(d => {
     const matchesSearch = d.name.toLowerCase().includes(driverSearch.toLowerCase()) || 
                           d.licenseNumber.toLowerCase().includes(driverSearch.toLowerCase());
@@ -414,41 +495,112 @@ function MainApp() {
            v.plateNumber.toLowerCase().includes(vehicleSearch.toLowerCase());
   });
 
-  // Dynamic Statistics
+  const filteredObjects = objects.filter(o => {
+    return o.name.toLowerCase().includes(objectSearch.toLowerCase()) ||
+           o.difficultyType.toLowerCase().includes(objectSearch.toLowerCase());
+  });
+
+  // KPI Calculations
   const activeDriversCount = drivers.filter(d => d.status === "ACTIVE").length;
-  const onRouteVehiclesCount = drivers.filter(d => d.status === "ACTIVE").length;
+  const activeVehiclesCount = vehicles.filter(v => v.status === "ACTIVE").length;
+
+  // Form Submits
+  const handleDriverSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingDriver) {
+      updateDriverMutation.mutate({ id: editingDriver.id, data: driverForm });
+      showNotification("Профиль сотрудника обновлен!", "success");
+    } else {
+      createDriverMutation.mutate(driverForm);
+      showNotification("Сотрудник добавлен в штат!", "success");
+    }
+    setDriverModalOpen(false);
+  };
+
+  const handleVehicleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingVehicle) {
+      updateVehicleMutation.mutate({ id: editingVehicle.id, data: vehicleForm });
+      showNotification("Карточка спецтехники обновлена!", "success");
+    } else {
+      createVehicleMutation.mutate(vehicleForm);
+      showNotification("Спецтехника поставлена на баланс!", "success");
+    }
+    setVehicleModalOpen(false);
+  };
+
+  const handleObjectSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const rateMultiplier = objectForm.difficultyType === "MOUNTAIN" ? 1.35 : 1.0;
+    createObjectMutation.mutate({ ...objectForm, rateMultiplier });
+    showNotification("Строительный объект успешно добавлен!", "success");
+    setObjectModalOpen(false);
+  };
+
+  const handleOrderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const driverObj = drivers.find(d => d.id === orderForm.driverId);
+    if (!driverObj) return;
+
+    createOrderMutation.mutate({
+      driverId: orderForm.driverId,
+      driverName: driverObj.name,
+      orderNumber: orderForm.orderNumber,
+      dateEffective: orderForm.dateEffective,
+      oldRate: driverObj.activeRate || 750,
+      newRate: Number(orderForm.newRate)
+    });
+    setOrderModalOpen(false);
+  };
+
+  // V2: Simulated payment handler
+  const [driverPaidStatuses, setDriverPaidStatuses] = useState<Record<string, "PAID" | "PENDING" | "PROCESSING">>({
+    d1: "PAID",
+    d2: "PENDING"
+  });
+  
+  const handlePayDriver = (id: string, name: string, amount: number) => {
+    setDriverPaidStatuses(prev => ({ ...prev, [id]: "PROCESSING" }));
+    setTimeout(() => {
+      setDriverPaidStatuses(prev => ({ ...prev, [id]: "PAID" }));
+      showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} ₽ водителю ${name}!`, "success");
+    }, 1200);
+  };
+
+  const getDriverPaidStatus = (id: string) => {
+    return driverPaidStatuses[id] || "PENDING";
+  };
 
   return (
-    <div className="bg-[#fcf8fb] text-[#1b1b1d] font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full">
+    <div className="bg-[#0f172a] text-[#f8fafc] font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full selection:bg-[#f97316] selection:text-white">
       
       {/* Dynamic Toast Alerts */}
       {alertMsg && (
         <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-xl shadow-2xl border text-white font-bold flex items-center gap-3 transition-all animate-bounce ${
-          alertMsg.type === "success" ? "bg-[#34C759] border-[#34C759]" : "bg-[#ba1a1a] border-[#ba1a1a]"
+          alertMsg.type === "success" ? "bg-[#10b981] border-[#10b981]" : "bg-[#ef4444] border-[#ef4444]"
         }`}>
           <Bell className="w-5 h-5" />
           <span>{alertMsg.text}</span>
         </div>
       )}
 
-      {/* Dispatcher Workspace Dashboard Area (70% standard) */}
-      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r border-[#e4e2e4]">
+      {/* Main Dispatcher Dashboard Area (72% standard) */}
+      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r border-[#334155] bg-[#0f172a]">
         
         {/* Workspace Brand and Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#0058bc] text-white px-2 py-0.5 text-xs font-bold rounded">MVP PRO</span>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#0058bc]">Авангард</h1>
+            <div className="flex items-center gap-2.5">
+              <span className="bg-[#f97316] text-white px-2 py-0.5 text-xs font-bold rounded shadow-sm">ERP V2.0 PRO</span>
+              <h1 className="text-3xl font-extrabold tracking-tight text-[#f8fafc] flex items-center gap-2">
+                <Truck className="w-7 h-7 text-[#f97316]" />
+                АВАНГАРД <span className="text-[#f97316] font-light">Heavy Machinery</span>
+              </h1>
             </div>
-            <p className="text-sm text-[#414755] mt-1 font-semibold">Центральный пульт управления автопарком • Автономный режим</p>
+            <p className="text-xs text-[#94a3b8] mt-1 font-semibold">Центральная система управления спецтехникой, объектами и Payroll • Кыргызстан</p>
           </div>
           <div className="flex gap-2">
-            <button className="h-10 px-4 border border-[#717786] bg-white text-[#1b1b1d] font-bold text-sm rounded-xl flex items-center gap-2 hover:bg-[#f6f3f5] transition-colors shadow-sm cursor-pointer">
-              <Download className="w-4 h-4" />
-              Экспорт
-            </button>
-            {(activeTab === "drivers" || activeTab === "vehicles") && (
+            {(activeTab === "drivers" || activeTab === "vehicles" || activeTab === "objects" || activeTab === "payroll") && (
               <button 
                 onClick={() => {
                   if (activeTab === "drivers") {
@@ -457,64 +609,84 @@ function MainApp() {
                     setDriverModalOpen(true);
                   } else if (activeTab === "vehicles") {
                     setEditingVehicle(null);
-                    setVehicleForm({ model: "", plateNumber: "", vin: "", status: "ACTIVE" });
+                    setVehicleForm({ model: "", plateNumber: "", vin: "", status: "ACTIVE", machineryType: "Гусеничный экскаватор" });
                     setVehicleModalOpen(true);
+                  } else if (activeTab === "objects") {
+                    setObjectForm({ name: "", latitude: 42.87, longitude: 74.56, difficultyType: "PLAIN" });
+                    setObjectModalOpen(true);
+                  } else if (activeTab === "payroll") {
+                    setOrderForm({ driverId: drivers[0]?.id || "", orderNumber: `П-${Math.floor(100 + Math.random() * 900)}`, dateEffective: new Date().toISOString().split('T')[0], newRate: 850 });
+                    setOrderModalOpen(true);
                   }
                 }}
-                className="h-10 px-4 bg-[#0058bc] text-white font-bold text-sm rounded-xl flex items-center gap-2 hover:bg-[#0070eb] transition-all shadow-md cursor-pointer animate-fadeIn"
+                className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white font-bold text-sm rounded-xl flex items-center gap-2 hover:shadow-md transition-all active:scale-95 cursor-pointer shadow-lg"
               >
                 <Plus className="w-4 h-4" />
-                {activeTab === "vehicles" ? "Добавить ТС" : "Добавить водителя"}
+                {activeTab === "drivers" && "Нанять водителя"}
+                {activeTab === "vehicles" && "Добавить технику"}
+                {activeTab === "objects" && "Создать объект"}
+                {activeTab === "payroll" && "Выдать приказ на ставку"}
               </button>
             )}
           </div>
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-[#e4e2e4] mb-6 overflow-x-auto whitespace-nowrap">
+        <div className="flex border-b border-[#334155] mb-6 overflow-x-auto whitespace-nowrap scrollbar-thin">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`px-6 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "overview"
-                ? "border-[#0058bc] text-[#0058bc]"
-                : "border-transparent text-[#414755] hover:text-[#1b1b1d]"
+                ? "border-[#f97316] text-[#f97316]"
+                : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
             <TrendingUp className="w-4 h-4" />
-            Панель управления
+            Пульт Управления
           </button>
           <button
             onClick={() => setActiveTab("drivers")}
-            className={`px-6 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "drivers"
-                ? "border-[#0058bc] text-[#0058bc]"
-                : "border-transparent text-[#414755] hover:text-[#1b1b1d]"
+                ? "border-[#f97316] text-[#f97316]"
+                : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
             <Users className="w-4 h-4" />
-            Водители
+            Машинисты и Допуски
           </button>
           <button
             onClick={() => setActiveTab("vehicles")}
-            className={`px-6 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "vehicles"
-                ? "border-[#0058bc] text-[#0058bc]"
-                : "border-transparent text-[#414755] hover:text-[#1b1b1d]"
+                ? "border-[#f97316] text-[#f97316]"
+                : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
-            <Truck className="w-4 h-4" />
-            Автопарк
+            <Wrench className="w-4 h-4" />
+            Спецтехника
+          </button>
+          <button
+            onClick={() => setActiveTab("objects")}
+            className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+              activeTab === "objects"
+                ? "border-[#f97316] text-[#f97316]"
+                : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
+            }`}
+          >
+            <MapPin className="w-4 h-4" />
+            Объекты работ (Бишкек)
           </button>
           <button
             onClick={() => setActiveTab("payroll")}
-            className={`px-6 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "payroll"
-                ? "border-[#0058bc] text-[#0058bc]"
-                : "border-transparent text-[#414755] hover:text-[#1b1b1d]"
+                ? "border-[#f97316] text-[#f97316]"
+                : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
             <Wallet className="w-4 h-4" />
-            Расчеты (Payroll)
+            Учёт Payroll & Приказы
           </button>
         </div>
 
@@ -522,81 +694,109 @@ function MainApp() {
         {activeTab === "overview" && (
           <div className="space-y-6 animate-fadeIn">
             
+            {/* V2 Critical Telemetry Alerts Container */}
+            {activeFuelDrainAlert && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-pulse relative overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
+                <div className="flex items-center gap-3 pl-2">
+                  <div className="p-2.5 bg-red-500/20 text-red-400 rounded-xl">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] bg-red-500 text-white font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Критический Инцидент (#СливТоплива)</span>
+                    <h4 className="text-sm font-extrabold text-white mt-1">Резкое падение уровня топлива (-{activeFuelDrainAlert.amount} Л) ТС {activeFuelDrainAlert.vehicleModel}</h4>
+                    <p className="text-xs text-red-200 mt-0.5">Оператор: <span className="font-bold">{activeFuelDrainAlert.driverName}</span> • Объект: <span className="font-bold">{activeFuelDrainAlert.objectName}</span> • Время: {activeFuelDrainAlert.timestamp}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto shrink-0 md:justify-end">
+                  <button 
+                    onClick={() => handleApplyFuelFine(activeFuelDrainAlert)}
+                    className="flex-1 md:flex-none h-9 px-4 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer"
+                  >
+                    Выписать штраф 1 800 ₽
+                  </button>
+                  <button 
+                    onClick={() => setActiveFuelDrainAlert(null)}
+                    className="flex-1 md:flex-none h-9 px-4 bg-slate-700 hover:bg-slate-600 text-white font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Игнорировать
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Metric Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {/* Card 1 */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
                     <Users className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[#34C759] font-bold text-xs bg-[#34C759]/10 px-2 py-0.5 rounded-full">
-                    +{drivers.length} водителей
+                  <span className="inline-flex items-center gap-1 text-[#10b981] font-bold text-xs bg-[#10b981]/10 px-2 py-0.5 rounded-full">
+                    +{drivers.length} машинистов
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Активные водители</p>
+                  <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Сотрудники на смене</p>
                   <h3 className="text-3xl font-extrabold tracking-tight">{activeDriversCount} / {drivers.length}</h3>
                 </div>
               </div>
               {/* Card 2 */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
                     <Truck className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[#414755] font-bold text-xs bg-[#e4e2e4] px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[#94a3b8] font-bold text-xs bg-[#334155] px-2 py-0.5 rounded-full">
                     Всего {vehicles.length} ТС
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Транспорта в рейсе</p>
-                  <h3 className="text-3xl font-extrabold tracking-tight">{onRouteVehiclesCount}</h3>
+                  <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Спецтехника в работе</p>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{activeVehiclesCount}</h3>
                 </div>
               </div>
               {/* Card 3 */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
                     <Fuel className="w-5 h-5" />
                   </div>
-                  <div className="w-16 h-8 bg-white border border-[#e4e2e4] rounded flex items-end justify-between px-1 pb-1">
-                    <div className="w-1.5 h-3 bg-[#adc6ff] rounded-t-sm"></div>
-                    <div className="w-1.5 h-4 bg-[#adc6ff] rounded-t-sm"></div>
-                    <div className="w-1.5 h-2 bg-[#adc6ff] rounded-t-sm"></div>
-                    <div className="w-1.5 h-5 bg-[#adc6ff] rounded-t-sm"></div>
-                    <div className="w-1.5 h-6 bg-[#0058bc] rounded-t-sm animate-pulse"></div>
+                  <div className="w-16 h-8 bg-slate-800 border border-[#334155] rounded flex items-end justify-between px-1 pb-1">
+                    <div className="w-1.5 h-3 bg-[#f97316]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-4 bg-[#f97316]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-2 bg-[#f97316]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-5 bg-[#f97316]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-6 bg-[#f97316] rounded-t-sm animate-pulse"></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Ср. расход топлива</p>
-                    <div className="group/tooltip relative cursor-pointer text-[#8e8e93] hover:text-[#0058bc]">
+                    <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Ср. расход ГСМ парка</p>
+                    <div className="group/tooltip relative cursor-pointer text-[#64748b] hover:text-[#f97316]">
                       <Info className="w-3.5 h-3.5" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1b1b1d] text-white text-[10px] font-semibold rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 text-center leading-normal">
-                        Агрегированный средний расход топлива по всем ТС на линии
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1e293b] border border-[#334155] text-white text-[10px] font-semibold rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 text-center leading-normal">
+                        Агрегированный средний расход спецтехники по активным сменам
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-3xl font-extrabold tracking-tight">
-                    {getAverageFuelConsumption()} <span className="text-sm font-normal text-[#414755]">л/100км</span>
-                  </h3>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{getAverageFuelConsumption()} <span className="text-sm font-normal text-[#94a3b8]">л/100км</span></h3>
                 </div>
               </div>
               {/* Card 4 */}
-              <div className="bg-[#f0edef] border border-[#FF9500]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
-                <div className="absolute inset-0 bg-[#FF9500]/5 pointer-events-none"></div>
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-[#FF9500]/10 rounded-lg border border-[#FF9500]/20 text-[#FF9500]">
-                    <Wrench className="w-5 h-5" />
+                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
+                    <Map className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[#FF9500] font-bold text-xs bg-[#FF9500]/10 px-2 py-0.5 rounded-full">
-                    Внимание
+                  <span className="inline-flex items-center gap-1 text-[#f97316] font-bold text-xs bg-[#f97316]/10 px-2 py-0.5 rounded-full">
+                    Активные
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Ожидает ТО</p>
-                  <h3 className="text-3xl font-extrabold tracking-tight text-[#1b1b1d]">1</h3>
+                  <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Строительные объекты</p>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{objects.length} <span className="text-sm font-normal text-[#94a3b8]">площадок</span></h3>
                 </div>
               </div>
             </div>
@@ -605,128 +805,132 @@ function MainApp() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Map Canvas Card */}
-              <div className="lg:col-span-2 bg-[#f0edef] border border-[#e4e2e4] rounded-xl overflow-hidden flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#e4e2e4] bg-white flex justify-between items-center">
-                  <h3 className="font-bold text-sm tracking-wide text-[#1b1b1d]">Карта автопарка</h3>
-                  <div className="flex items-center gap-1.5 text-[#34C759] text-xs font-bold bg-[#34C759]/10 px-2.5 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 bg-[#34C759] rounded-full animate-ping"></span>
-                    <span>Спутниковый радар LIVE</span>
+              <div className="lg:col-span-2 bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex flex-col h-[420px]">
+                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
+                  <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Схема строительных объектов (Бишкек LIVE)</h3>
+                  <div className="flex items-center gap-1.5 text-[#10b981] text-xs font-bold bg-[#10b981]/10 px-2.5 py-1 rounded-full">
+                    <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-ping"></span>
+                    <span>Телеметрия LIVE</span>
                   </div>
                 </div>
                 
-                <div className="relative flex-grow bg-[#dcd9dc] overflow-hidden flex items-center justify-center">
+                <div className="relative flex-grow bg-[#1e293b] overflow-hidden flex items-center justify-center">
                   
-                  {/* Grid Lines */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#adc6ff_1px,transparent_1px)] [background-size:16px_16px] opacity-35"></div>
+                  {/* Grid Lines representing city blocks */}
+                  <div className="absolute inset-0 bg-[radial-gradient(#334155_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40"></div>
                   
-                  {/* Decorative Highways */}
-                  <svg className="absolute inset-0 w-full h-full text-[#717786] opacity-30 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M 0 100 Q 150 150 300 100 T 600 100" fill="none" stroke="currentColor" strokeWidth="6" />
-                    <path d="M 100 0 C 150 200 80 300 200 400" fill="none" stroke="currentColor" strokeWidth="4" />
-                    <path d="M 0 350 L 600 250" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="5,5" />
+                  {/* Decorative Mountains (Tian Shan around Bishkek) */}
+                  <svg className="absolute bottom-0 left-0 right-0 h-28 text-[#334155] opacity-25 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <polygon points="0,100 20,40 40,70 65,30 85,60 100,100" fill="currentColor" />
+                    <polygon points="10,100 35,50 55,75 75,45 90,65 100,100" fill="#475569" opacity="0.4" />
                   </svg>
+
+                  {/* Geolocation Route Paths */}
+                  <svg className="absolute inset-0 w-full h-full text-[#475569] opacity-30 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 50 180 Q 250 120 400 280 T 600 180" fill="none" stroke="currentColor" strokeWidth="5" />
+                    <path d="M 120 80 Q 200 300 450 350" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="6,6" />
+                  </svg>
+
+                  {/* Interactive Object Site Markers */}
+                  {objects.map(obj => (
+                    <div 
+                      key={obj.id}
+                      onClick={() => setSelectedObject(obj)}
+                      className="absolute z-20 flex flex-col items-center cursor-pointer group/marker"
+                      style={{
+                        top: obj.id === "o1" ? "35%" : obj.id === "o2" ? "68%" : "22%",
+                        left: obj.id === "o1" ? "32%" : obj.id === "o2" ? "58%" : "72%"
+                      }}
+                    >
+                      <span className="bg-slate-900 border border-[#334155] text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg text-[#f8fafc] mb-1 group-hover/marker:bg-[#f97316] group-hover/marker:border-[#f97316] transition-colors flex items-center gap-1 select-none">
+                        <MapPin className="w-2.5 h-2.5 text-[#f97316] group-hover/marker:text-white" />
+                        {obj.name}
+                        {obj.difficultyType === "MOUNTAIN" && (
+                          <span className="bg-red-900 text-white font-extrabold text-[8px] px-1 rounded">1.35x</span>
+                        )}
+                      </span>
+                      <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-xl ${obj.difficultyType === "MOUNTAIN" ? "bg-red-500 animate-pulse" : "bg-[#f97316]"}`}></div>
+                    </div>
+                  ))}
 
                   {/* Active Live Driver Indicator */}
                   {simActive && (
                     <div 
-                      onClick={() => {
-                        const v = vehicles.find(vh => vh.id === simVehicleId);
-                        if (v) setSelectedVehicle(v);
-                      }}
-                      className="absolute z-30 flex flex-col items-center transition-all duration-1000 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                      className="absolute z-30 flex flex-col items-center transition-all duration-1000"
                       style={{
-                        top: `${30 + (simPathIndex * 7)}%`,
-                        left: `${20 + (simPathIndex * 8)}%`
+                        top: simObjectId === "o1" ? "35%" : simObjectId === "o2" ? "68%" : "22%",
+                        left: simObjectId === "o1" ? "32%" : simObjectId === "o2" ? "58%" : "72%"
                       }}
                     >
-                      <span className="bg-[#0058bc] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 mb-1 border border-white">
-                        <Navigation className="w-2.5 h-2.5 animate-spin" />
-                        Рейс в симуляторе
-                      </span>
+                      <div className="relative -top-7">
+                        <span className="bg-[#f97316] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 border border-white">
+                          <Activity className="w-2.5 h-2.5 animate-pulse text-white" />
+                          Смена LIVE
+                        </span>
+                      </div>
                       <div className="relative">
-                        <span className="absolute -inset-2.5 rounded-full bg-[#0058bc]/35 animate-ping"></span>
-                        <div className="w-4.5 h-4.5 rounded-full bg-[#0058bc] border-2 border-white shadow flex items-center justify-center"></div>
+                        <span className="absolute -inset-3 rounded-full bg-[#f97316]/35 animate-ping"></span>
+                        <div className="w-5 h-5 rounded-full bg-[#f97316] border-2 border-white shadow-2xl flex items-center justify-center">
+                          <Truck className="w-3 h-3 text-white" />
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Static Mock Markers */}
-                  <div 
-                    onClick={() => {
-                      const v = vehicles.find(vh => vh.id === "v1") || vehicles[0];
-                      if (v) setSelectedVehicle(v);
-                    }}
-                    className="absolute top-[45%] left-[25%] flex flex-col items-center cursor-pointer hover:scale-110 active:scale-95 transition-transform z-20"
-                  >
-                    <span className="bg-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md text-[#1b1b1d] mb-1 hover:bg-[#0058bc] hover:text-white transition-colors">ГРУЗ-402 (КАМАЗ)</span>
-                    <div className="w-3.5 h-3.5 rounded-full bg-[#34C759] border-2 border-white shadow"></div>
-                  </div>
-                  <div 
-                    onClick={() => {
-                      const v = vehicles.find(vh => vh.id === "v3") || vehicles[1];
-                      if (v) setSelectedVehicle(v);
-                    }}
-                    className="absolute top-[25%] left-[75%] flex flex-col items-center cursor-pointer hover:scale-110 active:scale-95 transition-transform z-20"
-                  >
-                    <span className="bg-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md text-[#1b1b1d] mb-1 hover:bg-[#0058bc] hover:text-white transition-colors">ФУР-092 (Scania)</span>
-                    <div className="w-3.5 h-3.5 rounded-full bg-[#34C759] border-2 border-white shadow"></div>
-                  </div>
-                  <div 
-                    onClick={() => {
-                      const v = vehicles.find(vh => vh.id === "v1") || vehicles[0];
-                      if (v) setSelectedVehicle(v);
-                    }}
-                    className="absolute top-[70%] left-[65%] flex flex-col items-center cursor-pointer hover:scale-110 active:scale-95 transition-transform z-20"
-                  >
-                    <span className="bg-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-md text-[#1b1b1d] mb-1 hover:bg-red-600 hover:text-white transition-colors">ФУР-118</span>
-                    <div className="w-3.5 h-3.5 rounded-full bg-[#ba1a1a] border-2 border-white shadow"></div>
-                  </div>
-
                   {/* Legend */}
-                  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-[#e4e2e4] rounded-lg p-2.5 shadow-md flex gap-4 text-xs font-bold">
+                  <div className="absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-sm border border-[#334155] rounded-xl p-2.5 shadow-xl flex gap-4 text-xs font-bold">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#34C759]"></div>
-                      <span>В движении</span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#f97316]"></div>
+                      <span>Строительный объект</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#FF9500]"></div>
-                      <span>Ожидание</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#ba1a1a]"></div>
-                      <span>Остановлен</span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                      <span>Горный сектор (1.35x)</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Maintenance Notifications Feed */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#e4e2e4] bg-white flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-[#FF9500]">
+              <div className="bg-[#1e293b] border border-[#334155] rounded-2xl flex flex-col h-[420px]">
+                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-[#f97316]">
                     <Wrench className="w-4 h-4" />
-                    <h3 className="font-bold text-sm tracking-wide text-[#1b1b1d]">Уведомления системы</h3>
+                    <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Мониторинг Документов</h3>
                   </div>
-                  <span className="bg-[#FF9500] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">1 Внимание</span>
+                  <span className="bg-[#ea580c] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">СТС / ПТС</span>
                 </div>
                 
-                <div className="flex-grow p-3 flex flex-col gap-3 overflow-y-auto bg-white">
+                <div className="flex-grow p-4 flex flex-col gap-3 overflow-y-auto bg-[#0f172a]/40">
                   {/* Alert 1 */}
-                  <div className="p-3 border border-[#FF9500]/20 bg-[#FF9500]/5 rounded-lg flex gap-3 relative overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#FF9500]"></div>
+                  <div className="p-3 border border-yellow-500/20 bg-yellow-500/5 rounded-xl flex gap-3 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
-                        <h4 className="text-xs font-extrabold text-[#FF9500]">Lada Largus (К147МР 77)</h4>
-                        <span className="text-[10px] text-[#8e8e93]">1ч назад</span>
+                        <h4 className="text-xs font-bold text-yellow-500">У машиниста С. Смирнова</h4>
+                        <span className="text-[10px] text-[#64748b]">Допуск</span>
                       </div>
-                      <p className="text-xs text-[#414755] mt-1 font-semibold leading-tight">Запланировано техническое обслуживание (ТО-2).</p>
-                      <button className="mt-2 text-[#FF9500] text-[10px] font-bold uppercase hover:underline">Подробнее</button>
+                      <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">Срок действия медсправки истекает через 14 дней.</p>
+                      <button className="mt-2 text-yellow-500 text-[10px] font-bold uppercase hover:underline" onClick={() => setSelectedDriver(drivers[1])}>Открыть документы</button>
+                    </div>
+                  </div>
+
+                  {/* Alert 2 */}
+                  <div className="p-3 border border-[#334155] bg-slate-800/40 rounded-xl flex gap-3 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#f97316]"></div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-xs font-bold text-slate-200">Кран Liebherr (KG 777 BSB)</h4>
+                        <span className="text-[10px] text-[#64748b]">ПТС</span>
+                      </div>
+                      <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">Документ «Разрешение Ростехнадзора» прикреплен и верифицирован.</p>
+                      <button className="mt-2 text-[#f97316] text-[10px] font-bold uppercase hover:underline" onClick={() => setSelectedVehicle(vehicles[1])}>Просмотр СТС/ПТС</button>
                     </div>
                   </div>
                   
-                  <div className="p-4 border border-dashed border-[#e4e2e4] rounded-xl flex flex-col items-center justify-center text-center text-[#8e8e93] h-full">
-                    <Info className="w-8 h-8 mb-2 text-[#717786]" />
-                    <span className="text-xs font-semibold">Новых критических инцидентов не зафиксировано.</span>
+                  <div className="p-4 border border-dashed border-[#334155] rounded-xl flex flex-col items-center justify-center text-center text-[#64748b] h-32 mt-auto">
+                    <Info className="w-6 h-6 mb-2 text-[#64748b]" />
+                    <span className="text-[11px] font-semibold">Все документы спецтехники заверены в Ростехнадзоре.</span>
                   </div>
                 </div>
               </div>
@@ -734,63 +938,73 @@ function MainApp() {
             </div>
 
             {/* Recent Events Log Table */}
-            <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-[#e4e2e4] bg-white flex justify-between items-center">
-                <h3 className="font-bold text-sm tracking-wide text-[#1b1b1d]">Последние события смен (Start/Stop)</h3>
-                <span className="text-xs text-[#0058bc] font-bold flex items-center gap-1.5 animate-pulse">
+            <div className="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
+                <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Оперативный Журнал (Старт/Стоп/Телеметрия)</h3>
+                <span className="text-xs text-[#f97316] font-bold flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Мгновенная реактивная синхронизация
+                  Моментальная синхронизация с датчиков
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse bg-white">
+                <table className="w-full text-left border-collapse bg-[#1e293b]">
                   <thead>
-                    <tr className="border-b border-[#e4e2e4] bg-[#f6f3f5] text-[#414755] text-[11px] font-bold uppercase tracking-wider">
-                      <th className="p-4">Водитель</th>
-                      <th className="p-4">Транспортное Средство</th>
+                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">
+                      <th className="p-4">Сотрудник (Машинист)</th>
+                      <th className="p-4">Спецтехника</th>
+                      <th className="p-4">Строительный объект</th>
                       <th className="p-4">Событие</th>
-                      <th className="p-4">Время события</th>
-                      <th className="p-4">GPS Локация</th>
+                      <th className="p-4">Время</th>
+                      <th className="p-4">GPS Телеметрия</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#e4e2e4] text-xs font-semibold">
+                  <tbody className="divide-y divide-[#334155] text-xs font-semibold text-slate-200">
                     {timeLogs.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-[#8e8e93]">Событий не обнаружено. Перейдите к симулятору водителя справа и запустите смену!</td>
+                        <td colSpan={6} className="p-8 text-center text-[#64748b]">Событий спецтехники не обнаружено. Запустите смену в мобильном клиенте оператора справа!</td>
                       </tr>
                     ) : (
-                      timeLogs.map((log) => (
-                        <tr key={log.id} className="hover:bg-[#f6f3f5] transition-colors">
-                          <td className="p-4 font-bold text-[#1b1b1d] flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-[#0058bc]/10 text-[#0058bc] flex items-center justify-center font-extrabold text-[10px]">
-                              {log.driverName?.split(" ").map(w=>w[0]).join("")}
-                            </div>
-                            {log.driverName}
-                          </td>
-                          <td className="p-4 text-[#414755]">{log.vehicleModel} ({log.vehiclePlate})</td>
-                          <td className="p-4">
-                            {log.eventType === "START" ? (
-                              <span className="inline-flex items-center gap-1 text-[#34C759] font-bold bg-[#34C759]/10 px-2 py-0.5 rounded-md text-[10px] uppercase">
-                                <Play className="w-2.5 h-2.5 fill-current" />
-                                Старт смены
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[#ba1a1a] font-bold bg-[#ba1a1a]/10 px-2 py-0.5 rounded-md text-[10px] uppercase">
-                                <Square className="w-2.5 h-2.5 fill-current" />
-                                Стоп смены
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4 text-[#414755]">
-                            {new Date(log.timestamp).toLocaleTimeString("ru-RU", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit"
-                            })}
-                          </td>
-                          <td className="p-4 text-[#8e8e93] font-mono">{log.latitude.toFixed(4)}° N, {log.longitude.toFixed(4)}° E</td>
-                        </tr>
-                      ))
+                      timeLogs.map((log) => {
+                        const obj = objects.find(o => o.id === log.objectId);
+                        return (
+                          <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                            <td className="p-4 font-bold text-white flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-[10px] border border-[#f97316]/20">
+                                {log.driverName?.split(" ").map(w=>w[0]).join("")}
+                              </div>
+                              {log.driverName}
+                            </td>
+                            <td className="p-4 text-slate-300">{log.vehicleModel} ({log.vehiclePlate})</td>
+                            <td className="p-4 text-slate-300">{obj ? obj.name : "Бишкек-База"}</td>
+                            <td className="p-4">
+                              {log.eventType === "START" ? (
+                                <span className="inline-flex items-center gap-1 text-[#10b981] font-bold bg-[#10b981]/10 px-2.5 py-0.5 rounded-md text-[10px] uppercase border border-[#10b981]/20">
+                                  <Play className="w-2.5 h-2.5 fill-current" />
+                                  Старт смены
+                                </span>
+                              ) : log.eventType === "STOP" ? (
+                                <span className="inline-flex items-center gap-1 text-slate-400 font-bold bg-slate-800 px-2.5 py-0.5 rounded-md text-[10px] uppercase border border-slate-700">
+                                  <Square className="w-2.5 h-2.5 fill-current" />
+                                  Стоп смены
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-red-500 font-bold bg-red-500/10 px-2.5 py-0.5 rounded-md text-[10px] uppercase border border-red-500/20 animate-pulse">
+                                  <AlertTriangle className="w-2.5 h-2.5" />
+                                  Слив Топлива
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4 text-slate-300">
+                              {new Date(log.timestamp).toLocaleTimeString("ru-RU", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit"
+                              })}
+                            </td>
+                            <td className="p-4 text-[#64748b] font-mono">{log.latitude.toFixed(4)}° N, {log.longitude.toFixed(4)}° E</td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -805,13 +1019,13 @@ function MainApp() {
           <div className="space-y-4 animate-fadeIn">
             
             {/* Filter Bar */}
-            <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-3 flex flex-col sm:flex-row gap-3">
+            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3 flex flex-col sm:flex-row gap-3">
               <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#717786] w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
                 <input 
                   value={driverSearch}
                   onChange={(e) => setDriverSearch(e.target.value)}
-                  className="w-full h-10 pl-9 pr-4 bg-white rounded border border-[#e4e2e4] focus:border-[#0058bc] text-sm outline-none font-medium placeholder:text-[#8e8e93]" 
+                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
                   placeholder="Поиск по ФИО, ВУ..." 
                   type="text"
                 />
@@ -820,7 +1034,7 @@ function MainApp() {
                 <select 
                   value={driverFilter}
                   onChange={(e) => setDriverFilter(e.target.value)}
-                  className="h-10 px-4 bg-white rounded border border-[#e4e2e4] focus:border-[#0058bc] text-sm font-bold outline-none min-w-[140px] cursor-pointer"
+                  className="h-10 px-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm font-bold outline-none min-w-[140px] cursor-pointer text-white"
                 >
                   <option value="">Все статусы</option>
                   <option value="active">В рейсе</option>
@@ -831,48 +1045,60 @@ function MainApp() {
             </div>
 
             {/* Drivers List */}
-            <div className="bg-white rounded-xl border border-[#e4e2e4] overflow-hidden">
+            <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[#e4e2e4] bg-[#f6f3f5] text-[#414755] text-xs font-bold uppercase tracking-wider">
+                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
                       <th className="p-4">ФИО Водителя</th>
-                      <th className="p-4">Номер удостоверения</th>
-                      <th className="p-4">Телефон</th>
+                      <th className="p-4">Номер тракторного ВУ</th>
+                      <th className="p-4">Категории спецтехники</th>
+                      <th className="p-4">Текущая ставка</th>
                       <th className="p-4">Статус</th>
                       <th className="p-4 text-right">Действия</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm font-bold text-[#1b1b1d] divide-y divide-[#e4e2e4]">
+                  <tbody className="text-sm font-bold text-slate-200 divide-y divide-[#334155]">
                     {filteredDrivers.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-[#8e8e93]">Водители не найдены. Добавьте нового!</td>
+                        <td colSpan={6} className="p-8 text-center text-[#64748b]">Водители не обнаружены. Нажмите «Нанять водителя» выше!</td>
                       </tr>
                     ) : (
                       filteredDrivers.map(d => (
-                        <tr key={d.id} className="hover:bg-[#f6f3f5] transition-colors">
-                          <td className="p-4 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#0058bc]/10 text-[#0058bc] border border-[#e4e2e4] flex items-center justify-center font-extrabold text-sm">
-                              {d.name.split(" ").map(w=>w[0]).join("")}
-                            </div>
-                            <div>
-                              <div className="font-bold text-[#1b1b1d]">{d.name}</div>
-                              <div className="md:hidden text-xs text-[#8e8e93] mt-0.5">ВУ: {d.licenseNumber}</div>
+                        <tr key={d.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="p-4">
+                            <button 
+                              onClick={() => setSelectedDriver(d)}
+                              className="font-bold text-white hover:text-[#f97316] transition-colors flex items-center gap-2 text-left cursor-pointer"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-xs border border-[#f97316]/20">
+                                {d.name.split(" ").map(w=>w[0]).join("")}
+                              </div>
+                              {d.name}
+                            </button>
+                          </td>
+                          <td className="p-4 text-slate-300 font-mono">{d.licenseNumber}</td>
+                          <td className="p-4">
+                            <div className="flex flex-wrap gap-1">
+                              {d.permitCategories?.map((c, i) => (
+                                <span key={i} className="text-[10px] bg-[#334155] text-slate-200 px-2 py-0.5 rounded font-medium">
+                                  {c}
+                                </span>
+                              )) || <span className="text-slate-400 text-xs">—</span>}
                             </div>
                           </td>
-                          <td className="p-4 text-[#414755]">{d.licenseNumber}</td>
-                          <td className="p-4 text-[#414755]">{d.phone || "—"}</td>
+                          <td className="p-4 text-[#f97316] font-extrabold">{d.activeRate || 750} ₽/ч</td>
                           <td className="p-4">
                             {d.status === "ACTIVE" ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#E5F2FF] text-[#0058bc] text-xs font-bold">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/10 text-[#10b981] text-xs font-bold border border-[#10b981]/20">
                                 В рейсе
                               </span>
                             ) : d.status === "FREE" ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#E8F8EE] text-[#34C759] text-xs font-bold">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-xs font-bold border border-slate-700">
                                 Свободен
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#f6f3f5] text-[#8e8e93] text-xs font-bold border border-[#e4e2e4]">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
                                 Вне смены
                               </span>
                             )}
@@ -880,14 +1106,23 @@ function MainApp() {
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-1.5">
                               <button 
-                                onClick={() => handleEditDriver(d)}
-                                className="p-2 text-[#717786] hover:text-[#0058bc] hover:bg-[#f6f3f5] transition-colors rounded-full cursor-pointer"
+                                onClick={() => {
+                                  setEditingDriver(d);
+                                  setDriverForm({ name: d.name, licenseNumber: d.licenseNumber, phone: d.phone, status: d.status });
+                                  setDriverModalOpen(true);
+                                }}
+                                className="p-2 text-slate-400 hover:text-[#f97316] hover:bg-slate-800 transition-colors rounded-full cursor-pointer"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button 
-                                onClick={() => handleDeleteDriver(d.id)}
-                                className="p-2 text-[#717786] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-colors rounded-full cursor-pointer"
+                                onClick={() => {
+                                  if (confirm("Вы уверены, что хотите уволить сотрудника?")) {
+                                    deleteDriverMutation.mutate(d.id);
+                                    showNotification("Сотрудник уволен!", "success");
+                                  }
+                                }}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors rounded-full cursor-pointer"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -909,13 +1144,13 @@ function MainApp() {
           <div className="space-y-4 animate-fadeIn">
             
             {/* Filter Bar */}
-            <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-3">
+            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#717786] w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
                 <input 
                   value={vehicleSearch}
                   onChange={(e) => setVehicleSearch(e.target.value)}
-                  className="w-full h-10 pl-9 pr-4 bg-white rounded border border-[#e4e2e4] focus:border-[#0058bc] text-sm outline-none font-medium placeholder:text-[#8e8e93]" 
+                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
                   placeholder="Поиск по модели, госномеру..." 
                   type="text"
                 />
@@ -923,48 +1158,59 @@ function MainApp() {
             </div>
 
             {/* Vehicles List */}
-            <div className="bg-white rounded-xl border border-[#e4e2e4] overflow-hidden">
+            <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[#e4e2e4] bg-[#f6f3f5] text-[#414755] text-xs font-bold uppercase tracking-wider">
-                      <th className="p-4">Транспортное средство</th>
+                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
+                      <th className="p-4">Спецтехника (Модель)</th>
+                      <th className="p-4">Классификация техники</th>
                       <th className="p-4">Госномер</th>
-                      <th className="p-4">VIN код</th>
-                      <th className="p-4">Статус ТС</th>
+                      <th className="p-4">Документы СТС/ПТС</th>
+                      <th className="p-4">Статус спецтехники</th>
                       <th className="p-4 text-right">Действия</th>
                     </tr>
                   </thead>
-                  <tbody className="text-sm font-bold text-[#1b1b1d] divide-y divide-[#e4e2e4]">
+                  <tbody className="text-sm font-bold text-slate-200 divide-y divide-[#334155]">
                     {filteredVehicles.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-[#8e8e93]">ТС не найдено. Создайте новый!</td>
+                        <td colSpan={6} className="p-8 text-center text-[#64748b]">Спецтехники не найдено. Нажмите «Добавить технику» выше!</td>
                       </tr>
                     ) : (
                       filteredVehicles.map(v => (
-                        <tr key={v.id} className="hover:bg-[#f6f3f5] transition-colors">
-                          <td className="p-4 font-bold text-[#1b1b1d] flex items-center gap-2">
+                        <tr key={v.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="p-4 font-bold text-white flex items-center gap-2">
                             <button 
                               onClick={() => setSelectedVehicle(v)}
-                              className="font-bold text-[#1b1b1d] hover:text-[#0058bc] transition-colors flex items-center gap-2 text-left cursor-pointer"
+                              className="font-bold text-white hover:text-[#f97316] transition-colors flex items-center gap-2 text-left cursor-pointer"
                             >
-                              <Truck className="w-4 h-4 text-[#0058bc]" />
+                              <Truck className="w-4 h-4 text-[#f97316]" />
                               {v.model}
                             </button>
                           </td>
-                          <td className="p-4 text-[#414755] font-mono">{v.plateNumber}</td>
-                          <td className="p-4 text-[#414755] font-mono text-xs">{v.vin}</td>
+                          <td className="p-4 text-slate-300">{v.machineryType || "Спецтехника"}</td>
+                          <td className="p-4 text-slate-300 font-mono">{v.plateNumber}</td>
+                          <td className="p-4">
+                            <div className="flex gap-2">
+                              {v.documents?.map((doc, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-1 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                                  <FileText className="w-3 h-3 text-[#f97316]" />
+                                  {doc.type}
+                                </span>
+                              )) || <span className="text-slate-400 text-xs">—</span>}
+                            </div>
+                          </td>
                           <td className="p-4">
                             {v.status === "ACTIVE" ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#E8F8EE] text-[#34C759] text-xs font-bold">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/10 text-[#10b981] text-xs font-bold border border-[#10b981]/20">
                                 Активен
                               </span>
                             ) : v.status === "MAINTENANCE" ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#FF9500]/10 text-[#FF9500] text-xs font-bold border border-[#FF9500]/20">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-500 text-xs font-bold border border-yellow-500/20">
                                 В ремонте
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#f6f3f5] text-[#8e8e93] text-xs font-bold border border-[#e4e2e4]">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
                                 Списан
                               </span>
                             )}
@@ -972,14 +1218,23 @@ function MainApp() {
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-1.5">
                               <button 
-                                onClick={() => handleEditVehicle(v)}
-                                className="p-2 text-[#717786] hover:text-[#0058bc] hover:bg-[#f6f3f5] transition-colors rounded-full cursor-pointer"
+                                onClick={() => {
+                                  setEditingVehicle(v);
+                                  setVehicleForm({ model: v.model, plateNumber: v.plateNumber, vin: v.vin, status: v.status, machineryType: v.machineryType || "Гусеничный экскаватор" });
+                                  setVehicleModalOpen(true);
+                                }}
+                                className="p-2 text-slate-400 hover:text-[#f97316] hover:bg-slate-800 transition-colors rounded-full cursor-pointer"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button 
-                                onClick={() => handleDeleteVehicle(v.id)}
-                                className="p-2 text-[#717786] hover:text-[#ba1a1a] hover:bg-[#ba1a1a]/10 transition-colors rounded-full cursor-pointer"
+                                onClick={() => {
+                                  if (confirm("Вы уверены, что хотите списать эту технику?")) {
+                                    deleteVehicleMutation.mutate(v.id);
+                                    showNotification("Спецтехника списана с баланса!", "success");
+                                  }
+                                }}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors rounded-full cursor-pointer"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -996,9 +1251,63 @@ function MainApp() {
           </div>
         )}
 
+        {/* V2: Construction Objects View */}
+        {activeTab === "objects" && (
+          <div className="space-y-4 animate-fadeIn">
+            
+            {/* Filter Bar */}
+            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
+                <input 
+                  value={objectSearch}
+                  onChange={(e) => setObjectSearch(e.target.value)}
+                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
+                  placeholder="Поиск по названию, типу сложности..." 
+                  type="text"
+                />
+              </div>
+            </div>
+
+            {/* Objects Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {filteredObjects.map(obj => (
+                <div 
+                  key={obj.id}
+                  onClick={() => setSelectedObject(obj)}
+                  className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 hover:shadow-2xl hover:border-[#f97316]/50 transition-all cursor-pointer space-y-4 group"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="p-3 bg-[#f97316]/10 text-[#f97316] rounded-xl group-hover:bg-[#f97316] group-hover:text-white transition-colors">
+                      <MapPin className="w-6 h-6" />
+                    </div>
+                    {obj.difficultyType === "MOUNTAIN" ? (
+                      <span className="bg-red-500/10 text-red-400 font-extrabold text-[10px] px-2.5 py-1 rounded-full border border-red-500/20 uppercase tracking-wide">
+                        Горный сектор 1.35x
+                      </span>
+                    ) : (
+                      <span className="bg-blue-500/10 text-blue-400 font-extrabold text-[10px] px-2.5 py-1 rounded-full border border-blue-500/20 uppercase tracking-wide">
+                        Равнинный 1.0x
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-lg text-white group-hover:text-[#f97316] transition-colors">{obj.name}</h4>
+                    <p className="text-xs text-[#94a3b8] mt-1 font-mono">Координаты: {obj.latitude.toFixed(4)}° N, {obj.longitude.toFixed(4)}° E</p>
+                  </div>
+                  <div className="border-t border-[#334155] pt-3 flex justify-between items-center text-xs">
+                    <span className="text-[#64748b] font-bold">Тариф надбавки</span>
+                    <span className="text-[#f8fafc] font-extrabold">{obj.rateMultiplier}x к базовой ставке</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
         {/* Smart Payroll Tab View */}
         {activeTab === "payroll" && (() => {
-          // Sum up metrics for analytics cards
           let totalHours = 0;
           let totalAdjustments = 0;
           let totalPayroll = 0;
@@ -1009,7 +1318,16 @@ function MainApp() {
             const idlH = getDriverIdleHours(d.id);
             const rate = getDriverRate(d.id);
             const adj = getDriverAdjustment(d.id);
-            const payout = (actH * rate) + (idlH * rate * 0.5) + adj;
+
+            let multiplier = 1.0;
+            if (d.id === simDriverId && simActive) {
+              const activeObject = objects.find(o => o.id === simObjectId);
+              multiplier = activeObject?.rateMultiplier || 1.0;
+            } else if (d.id === "d2") {
+              multiplier = 1.35;
+            }
+
+            const payout = (actH * rate * multiplier) + (idlH * rate * 0.5) + adj;
             
             totalHours += actH + idlH;
             totalAdjustments += adj;
@@ -1026,182 +1344,215 @@ function MainApp() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 
                 {/* Total Payroll FOT */}
-                <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
                       <Wallet className="w-5 h-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[#34C759] font-bold text-xs bg-[#34C759]/10 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[#10b981] font-bold text-xs bg-[#10b981]/10 px-2 py-0.5 rounded-full">
                       ФОТ Активен
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Фонд оплаты (ФОТ)</p>
+                    <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Фонд оплаты (ФОТ)</p>
                     <h3 className="text-3xl font-extrabold tracking-tight">
-                      {Math.round(totalPayroll).toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#414755]">₽</span>
+                      {Math.round(totalPayroll).toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]">₽</span>
                     </h3>
                   </div>
                 </div>
 
                 {/* Avg Driver Hourly Rate */}
-                <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
                       <Coins className="w-5 h-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[#414755] font-bold text-xs bg-[#e4e2e4] px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[#94a3b8] font-bold text-xs bg-[#334155] px-2 py-0.5 rounded-full">
                       Средняя
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Средняя ставка</p>
+                    <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Средняя ставка</p>
                     <h3 className="text-3xl font-extrabold tracking-tight">
-                      {avgRate} <span className="text-sm font-normal text-[#414755]">₽/ч</span>
+                      {avgRate} <span className="text-sm font-normal text-[#94a3b8]">₽/ч</span>
                     </h3>
                   </div>
                 </div>
 
                 {/* Total Fleet Route Hours */}
-                <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#0058bc]">
+                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
                       <Clock className="w-5 h-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[#0058bc] font-bold text-xs bg-[#0058bc]/10 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[#f97316] font-bold text-xs bg-[#f97316]/10 px-2 py-0.5 rounded-full">
                       +{drivers.filter(d=>d.status === "ACTIVE").length} на линии
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Всего отработано</p>
+                    <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Всего отработано</p>
                     <h3 className="text-3xl font-extrabold tracking-tight">
-                      {Math.round(totalHours)} <span className="text-sm font-normal text-[#414755]">ч</span>
+                      {Math.round(totalHours)} <span className="text-sm font-normal text-[#94a3b8]">ч</span>
                     </h3>
                   </div>
                 </div>
 
                 {/* Adjustments Fuel Saving/Loss */}
-                <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#e4e2e4] text-[#FF9500]">
+                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#ef4444]">
                       <Fuel className="w-5 h-5" />
                     </div>
                     <span className={`inline-flex items-center gap-1 font-bold text-xs px-2 py-0.5 rounded-full ${
-                      totalAdjustments >= 0 ? "text-[#34C759] bg-[#34C759]/10" : "text-[#ba1a1a] bg-[#ba1a1a]/10"
+                      totalAdjustments >= 0 ? "text-[#10b981] bg-[#10b981]/10" : "text-red-500 bg-red-500/10"
                     }`}>
-                      {totalAdjustments >= 0 ? "Экономия" : "Перерасход"}
+                      {totalAdjustments >= 0 ? "Надбавки" : "Корректировки"}
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-[#414755] font-bold uppercase tracking-wider mb-1">Корректировки ГСМ</p>
-                    <h3 className="text-3xl font-extrabold tracking-tight">
-                      {totalAdjustments >= 0 ? "+" : ""}{totalAdjustments.toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#414755]">₽</span>
+                    <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Штрафы и надбавки</p>
+                    <h3 className={`text-3xl font-extrabold tracking-tight ${totalAdjustments < 0 ? "text-red-400" : "text-[#f8fafc]"}`}>
+                      {totalAdjustments >= 0 ? "+" : ""}{totalAdjustments.toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]">₽</span>
                     </h3>
                   </div>
                 </div>
 
               </div>
 
-              {/* Billing Period and Excel Export */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <span className="text-xs font-bold text-[#414755] uppercase tracking-wider">Период расчета:</span>
-                  <select className="h-9 px-3 bg-white rounded-lg border border-[#e4e2e4] focus:border-[#0058bc] text-xs font-bold outline-none cursor-pointer bg-white">
-                    <option>Май 2026 (Текущий)</option>
-                    <option>Апрель 2026</option>
-                    <option>Март 2026</option>
-                  </select>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto justify-end">
-                  <button className="h-9 px-4 border border-[#e4e2e4] bg-white text-[#1b1b1d] font-bold text-xs rounded-lg flex items-center gap-2 hover:bg-[#f6f3f5] transition-colors cursor-pointer shadow-sm">
-                    <Download className="w-4 h-4" />
-                    Скачать ведомость (XLSX)
+              {/* Active Wage Decrees Timeline (V2) */}
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-extrabold text-sm tracking-wide text-white flex items-center gap-2">
+                    <FileSignature className="w-4 h-4 text-[#f97316]" />
+                    Журнал Приказов об установлении ставок
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      setOrderForm({ driverId: drivers[0]?.id || "", orderNumber: `П-${Math.floor(100 + Math.random() * 900)}`, dateEffective: new Date().toISOString().split('T')[0], newRate: 850 });
+                      setOrderModalOpen(true);
+                    }}
+                    className="h-8 px-3 bg-[#0f172a] hover:bg-slate-800 text-[#f97316] text-xs font-bold rounded-lg border border-[#334155] flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Инициализировать приказ
                   </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {orders.map(ord => (
+                    <div key={ord.id} className="p-4 bg-[#0f172a]/60 rounded-xl border border-[#334155] flex justify-between items-start gap-4">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded font-extrabold">Приказ №{ord.orderNumber}</span>
+                          <span className="text-[10px] text-[#64748b] font-bold">Срок: {ord.dateEffective}</span>
+                        </div>
+                        <h4 className="font-extrabold text-sm text-white">{ord.driverName}</h4>
+                        <p className="text-xs text-[#94a3b8]">Ставка пересматривается: <span className="line-through text-slate-500">{ord.oldRate}</span> → <span className="font-bold text-[#f97316]">{ord.newRate} ₽/ч</span></p>
+                      </div>
+                      <div>
+                        {ord.status === "SIGNED" ? (
+                          <span className="inline-flex items-center gap-1 bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">
+                            <CheckCircle className="w-3.5 h-3.5" /> Подписан
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase animate-pulse">
+                            Ожидает подписи в приложении
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Spreadsheet Billing Table */}
-              <div className="bg-white rounded-xl border border-[#e4e2e4] overflow-hidden">
-                <div className="p-4 border-b border-[#e4e2e4] bg-[#fcf8fb] flex justify-between items-center">
-                  <h3 className="font-extrabold text-sm tracking-wide text-[#1b1b1d]">Детализированный расчет зарплаты водителей</h3>
-                  <span className="text-[10px] font-extrabold bg-[#0058bc]/10 text-[#0058bc] px-2.5 py-1 rounded-full uppercase tracking-wide">
-                    Учет корректировок в реальном времени
+              <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 flex justify-between items-center">
+                  <h3 className="font-extrabold text-sm tracking-wide text-white">Ведомость расчетов и начисления Payroll</h3>
+                  <span className="text-[10px] font-extrabold bg-[#f97316]/10 text-[#f97316] px-2.5 py-1 rounded-full uppercase tracking-wide">
+                    Учет условий местности объектов (Бишкек/Горы)
                   </span>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse bg-white">
+                  <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[#e4e2e4] bg-[#f6f3f5] text-[#414755] text-[11px] font-extrabold uppercase tracking-wider">
-                        <th className="p-4">Водитель</th>
-                        <th className="p-4">Активное ТС</th>
+                      <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
+                        <th className="p-4">Сотрудник (Машинист)</th>
+                        <th className="p-4">Активный объект</th>
+                        <th className="p-4">Коэфф. объекта</th>
                         <th className="p-4">В движении (ч)</th>
                         <th className="p-4">Простой (ч)</th>
                         <th className="p-4">Ставка (₽/ч)</th>
-                        <th className="p-4">Коррекция ГСМ (₽)</th>
+                        <th className="p-4">Штрафы/Премии (₽)</th>
                         <th className="p-4">Итого к выплате</th>
                         <th className="p-4">Статус</th>
                         <th className="p-4 text-right">Действия</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#e4e2e4] text-xs font-semibold">
+                    <tbody className="divide-y divide-[#334155] text-xs font-semibold">
                       {drivers.map(d => {
                         const actH = getDriverActiveHours(d.id);
                         const idlH = getDriverIdleHours(d.id);
                         const rate = getDriverRate(d.id);
                         const adj = getDriverAdjustment(d.id);
                         const status = getDriverPaidStatus(d.id);
-                        
-                        const payout = (actH * rate) + (idlH * rate * 0.5) + adj;
 
-                        // Find driver's active vehicle
-                        const activeLog = timeLogs.find(l => l.driverId === d.id && l.eventType === "START");
-                        const activeVehicleModel = activeLog ? activeLog.vehicleModel : "—";
-                        const activeVehiclePlate = activeLog ? activeLog.vehiclePlate : "";
+                        let objectName = "База";
+                        let multiplier = 1.0;
+                        if (d.id === simDriverId && simActive) {
+                          const activeObject = objects.find(o => o.id === simObjectId);
+                          objectName = activeObject?.name || "ЖК Ала-Тоо (Бишкек)";
+                          multiplier = activeObject?.rateMultiplier || 1.0;
+                        } else if (d.id === "d2") {
+                          objectName = "Трасса Бишкек-Ош";
+                          multiplier = 1.35;
+                        }
+                        
+                        const payout = (actH * rate * multiplier) + (idlH * rate * 0.5) + adj;
 
                         return (
-                          <tr key={d.id} className="hover:bg-[#f6f3f5] transition-colors">
-                            <td className="p-4 font-bold text-[#1b1b1d] flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-[#0058bc]/10 text-[#0058bc] flex items-center justify-center font-extrabold text-[10px]">
+                          <tr key={d.id} className="hover:bg-slate-800/40 transition-colors text-slate-200">
+                            <td className="p-4 font-bold text-white flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-[10px]">
                                 {d.name.split(" ").map(w=>w[0]).join("")}
                               </div>
                               {d.name}
                             </td>
-                            <td className="p-4 text-[#414755]">
-                              {activeVehicleModel} {activeVehiclePlate && `(${activeVehiclePlate})`}
+                            <td className="p-4 text-slate-300">{objectName}</td>
+                            <td className="p-4">
+                              <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${
+                                multiplier > 1 ? "bg-red-500/20 text-red-400" : "bg-slate-800 text-slate-400"
+                              }`}>
+                                {multiplier}x
+                              </span>
                             </td>
-                            <td className="p-4 text-[#1b1b1d] tabular-nums font-bold">{actH.toFixed(1)}</td>
-                            <td className="p-4 text-[#414755] tabular-nums">{idlH.toFixed(1)}</td>
-                            <td className="p-4 text-[#1b1b1d] tabular-nums">
-                              <input 
-                                type="number" 
-                                value={rate}
-                                onChange={(e) => setDriverRates(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
-                                className="w-16 h-7 bg-[#f6f3f5] border border-[#e4e2e4] rounded px-1.5 font-bold text-[#1b1b1d] text-center focus:border-[#0058bc] outline-none"
-                              />
+                            <td className="p-4 text-white tabular-nums font-bold">{actH.toFixed(1)}</td>
+                            <td className="p-4 text-slate-400 tabular-nums">{idlH.toFixed(1)}</td>
+                            <td className="p-4 text-white tabular-nums">
+                              {rate} ₽/ч
                             </td>
                             <td className="p-4 tabular-nums">
                               <input 
                                 type="number" 
                                 value={adj}
-                                onChange={(e) => setDriverAdjustments(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
-                                className={`w-20 h-7 border rounded px-1.5 font-bold text-center focus:border-[#0058bc] outline-none ${
-                                  adj >= 0 ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"
+                                onChange={(e) => setManualAdjustments(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
+                                className={`w-20 h-7 border rounded px-1.5 font-bold text-center focus:border-[#f97316] outline-none bg-[#0f172a] text-white ${
+                                  adj >= 0 ? "border-green-800 text-green-400" : "border-red-800 text-red-400"
                                 }`}
                               />
                             </td>
-                            <td className="p-4 text-[#0058bc] font-extrabold text-sm tabular-nums">
+                            <td className="p-4 text-[#f97316] font-extrabold text-sm tabular-nums">
                               {Math.round(payout).toLocaleString("ru-RU")} ₽
                             </td>
                             <td className="p-4">
                               {status === "PAID" ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#E8F8EE] text-[#34C759] text-[10px] font-extrabold border border-[#34C759]/20 shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/15 text-[#10b981] text-[10px] font-extrabold border border-[#10b981]/20 shadow-sm">
                                   Выплачено
                                 </span>
                               ) : status === "PROCESSING" ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#FF9500]/10 text-[#FF9500] text-[10px] font-extrabold border border-[#FF9500]/20 animate-pulse shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#f97316]/10 text-[#f97316] text-[10px] font-extrabold border border-[#f97316]/20 animate-pulse shadow-sm">
                                   В обработке
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#adc6ff]/20 text-[#0058bc] text-[10px] font-extrabold border border-[#0058bc]/20 shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-extrabold border border-blue-500/20 shadow-sm">
                                   К выплате
                                 </span>
                               )}
@@ -1210,7 +1561,7 @@ function MainApp() {
                               {status === "PENDING" && (
                                 <button
                                   onClick={() => handlePayDriver(d.id, d.name, payout)}
-                                  className="h-8 px-3 bg-[#34C759] hover:bg-[#2fb34f] text-white font-extrabold text-xs rounded-lg transition-colors cursor-pointer shadow-sm hover:shadow active:scale-95 duration-150"
+                                  className="h-8 px-3 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold text-xs rounded-lg transition-colors cursor-pointer shadow-md hover:shadow active:scale-95 duration-150"
                                 >
                                   Выплатить
                                 </button>
@@ -1218,13 +1569,13 @@ function MainApp() {
                               {status === "PAID" && (
                                 <button
                                   onClick={() => setDriverPaidStatuses(prev => ({ ...prev, [d.id]: "PENDING" }))}
-                                  className="text-[10px] text-[#8e8e93] hover:text-[#ba1a1a] font-bold uppercase cursor-pointer"
+                                  className="text-[10px] text-slate-400 hover:text-red-400 font-bold uppercase cursor-pointer"
                                 >
                                   Сбросить
                                 </button>
                               )}
                               {status === "PROCESSING" && (
-                                <span className="text-[10px] text-[#FF9500] font-bold uppercase">Банк...</span>
+                                <span className="text-[10px] text-[#f97316] font-bold uppercase">Банк...</span>
                               )}
                             </td>
                           </tr>
@@ -1236,26 +1587,35 @@ function MainApp() {
               </div>
 
               {/* Payroll Visualization Graph Bar */}
-              <div className="bg-[#f0edef] border border-[#e4e2e4] rounded-xl p-5 space-y-4 animate-fadeIn">
-                <h4 className="font-extrabold text-sm text-[#1b1b1d] tracking-wide">Распределение фонда оплаты труда по водителям</h4>
-                <div className="space-y-3.5 bg-white p-4 rounded-lg border border-[#e4e2e4]">
+              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 space-y-4">
+                <h4 className="font-extrabold text-sm text-white tracking-wide">Распределение фонда оплаты труда по сотрудникам</h4>
+                <div className="space-y-3.5 bg-[#0f172a]/60 p-4 rounded-xl border border-[#334155]">
                   {drivers.map(d => {
                     const actH = getDriverActiveHours(d.id);
                     const idlH = getDriverIdleHours(d.id);
                     const rate = getDriverRate(d.id);
                     const adj = getDriverAdjustment(d.id);
-                    const payout = (actH * rate) + (idlH * rate * 0.5) + adj;
+                    
+                    let multiplier = 1.0;
+                    if (d.id === simDriverId && simActive) {
+                      const activeObject = objects.find(o => o.id === simObjectId);
+                      multiplier = activeObject?.rateMultiplier || 1.0;
+                    } else if (d.id === "d2") {
+                      multiplier = 1.35;
+                    }
+
+                    const payout = (actH * rate * multiplier) + (idlH * rate * 0.5) + adj;
                     const percent = totalPayroll > 0 ? (payout / totalPayroll) * 100 : 0;
 
                     return (
                       <div key={d.id} className="space-y-1">
                         <div className="flex justify-between text-xs font-bold">
-                          <span className="text-[#1b1b1d]">{d.name}</span>
-                          <span className="text-[#414755]">{Math.round(percent)}% ({Math.round(payout).toLocaleString("ru-RU")} ₽)</span>
+                          <span className="text-white">{d.name}</span>
+                          <span className="text-slate-300">{Math.round(percent)}% ({Math.round(payout).toLocaleString("ru-RU")} ₽)</span>
                         </div>
-                        <div className="w-full h-3 bg-[#f6f3f5] rounded-full overflow-hidden border border-[#e4e2e4]">
+                        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-[#334155]">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#0058bc] to-[#0070eb] rounded-full"
+                            className="h-full bg-gradient-to-r from-[#f97316] to-[#ea580c] rounded-full"
                             style={{ width: `${percent}%` }}
                           ></div>
                         </div>
@@ -1272,203 +1632,235 @@ function MainApp() {
       </div>
 
       {/* Right Side Smartphone Simulator Panel (30% standard) */}
-      <div className="bg-[#f6f3f5] w-full lg:w-[380px] p-4 sm:p-6 shrink-0 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-[#e4e2e4] select-none h-screen overflow-y-auto">
+      <div className="bg-[#1e293b] w-full lg:w-[380px] p-4 sm:p-6 shrink-0 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-[#334155] select-none h-screen overflow-y-auto">
         <div className="mb-4">
-          <h2 className="text-lg font-extrabold tracking-tight text-[#1b1b1d] flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#0058bc] animate-ping"></span>
-            Simulator-Мобильный Клиент
+          <h2 className="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] animate-ping"></span>
+            Мобильное приложение водителя
           </h2>
-          <p className="text-xs text-[#8e8e93] font-bold mt-0.5">Start/Stop сессии + передача GPS координат</p>
+          <p className="text-xs text-[#94a3b8] font-bold mt-0.5">Электронная подпись приказов + симулятор ГСМ</p>
         </div>
 
         {/* Visual Smartphone Wrapper Container */}
-        <div className="bg-[#1b1b1d] p-3 rounded-[32px] shadow-2xl border-4 border-[#717786] flex flex-col h-[710px] relative overflow-hidden select-none max-w-sm mx-auto w-full">
+        <div className="bg-[#0f172a] p-3 rounded-[32px] shadow-2xl border-4 border-[#475569] flex flex-col h-[710px] relative overflow-hidden select-none max-w-sm mx-auto w-full">
           {/* Speaker Notch */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-[#1b1b1d] rounded-full z-50 flex items-center justify-center">
-            <div className="w-12 h-1 bg-[#414755] rounded-full"></div>
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-[#0f172a] rounded-full z-50 flex items-center justify-center">
+            <div className="w-12 h-1 bg-[#334155] rounded-full"></div>
           </div>
 
           {/* Virtual Mobile Screen */}
-          <div className="bg-white flex-grow rounded-[20px] overflow-hidden flex flex-col relative select-none">
+          <div className="bg-[#f8fafc] flex-grow rounded-[20px] overflow-hidden flex flex-col relative select-none text-slate-900">
             
             {/* Simulator Mobile App Header */}
-            <header className="h-14 bg-white border-b border-[#e4e2e4] flex items-center justify-between px-4 pt-4 shrink-0">
-              <span className="font-extrabold text-lg text-[#1b1b1d] tracking-tight">Авангард</span>
-              <span className="text-[10px] font-extrabold bg-[#f0edef] text-[#414755] px-2 py-0.5 rounded tracking-wide uppercase">Учёт времени</span>
+            <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-4 shrink-0">
+              <span className="font-extrabold text-base text-slate-800 tracking-tight flex items-center gap-1">
+                <Truck className="w-4 h-4 text-[#f97316]" />
+                АВАНГАРД
+              </span>
+              <span className="text-[10px] font-extrabold bg-[#f1f5f9] text-slate-600 px-2 py-0.5 rounded tracking-wide uppercase">Спецтехника</span>
             </header>
 
             {/* Mobile View Screen Scrollable */}
             <div className="flex-grow p-4 overflow-y-auto flex flex-col gap-4 select-none pb-6">
               
+              {/* V2: Dynamic Order/Decree Signing Section in Smartphone */}
+              {showMobileSignOrder && (
+                <div className="p-3.5 bg-yellow-500/10 border border-yellow-500/30 rounded-xl space-y-3 shrink-0 animate-pulse">
+                  <div className="flex items-center gap-1.5 text-yellow-700 font-extrabold text-[11px] uppercase">
+                    <FileSignature className="w-4 h-4 animate-bounce" />
+                    Приказ №{showMobileSignOrder.orderNumber}
+                  </div>
+                  <div className="text-xs text-slate-800 space-y-1">
+                    <p className="font-bold">Уважаемый {showMobileSignOrder.driverName},</p>
+                    <p className="leading-tight">Приказом руководства ваша часовая ставка повышается: <span className="line-through text-slate-500">{showMobileSignOrder.oldRate}</span> → <span className="font-extrabold text-green-700">{showMobileSignOrder.newRate} ₽/ч</span>.</p>
+                  </div>
+                  
+                  {/* Visual Signature pad area */}
+                  <div className="h-20 bg-white border border-slate-300 rounded-lg relative overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => setSignatureDrawn(true)}>
+                    {signatureDrawn ? (
+                      <span className="font-mono text-xs text-slate-500 italic border-b border-slate-400 pb-0.5">Ivanov_signed_digital_key_889</span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-center px-4">Коснитесь здесь для электронной подписи</span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleMobileSignDecree}
+                    disabled={!signatureDrawn}
+                    className={`w-full h-9 font-extrabold text-xs rounded-xl shadow transition-all cursor-pointer ${
+                      signatureDrawn ? "bg-[#10b981] hover:bg-[#059669] text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Подписать приказ
+                  </button>
+                </div>
+              )}
+
               {/* Simulator Config Selector Card */}
-              <div className="p-3 bg-[#f0edef] rounded-xl border border-[#e4e2e4] flex flex-col gap-2.5 shrink-0">
-                <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider">Идентификация водителя</span>
+              <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 flex flex-col gap-2.5 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Идентификация смены</span>
                 <div>
-                  <label className="text-[10px] font-extrabold text-[#414755]">Водитель</label>
+                  <label className="text-[10px] font-extrabold text-slate-700">Машинист / Оператор</label>
                   <select 
                     value={simDriverId}
                     onChange={(e) => setSimDriverId(e.target.value)}
                     disabled={simActive}
-                    className="w-full h-8 text-xs bg-white rounded border border-[#e4e2e4] px-2 font-semibold outline-none mt-0.5 cursor-pointer"
+                    className="w-full h-8 text-xs bg-white rounded border border-slate-300 px-2 font-semibold outline-none mt-0.5 cursor-pointer"
                   >
-                    <option value="">Выберите водителя...</option>
+                    <option value="">Выберите сотрудника...</option>
                     {drivers.map(d => (
-                      <option key={d.id} value={d.id}>{d.name} ({d.status === "ACTIVE" ? "В рейсе" : "Свободен"})</option>
+                      <option key={d.id} value={d.id}>{d.name} ({d.status === "ACTIVE" ? "На смене" : "Свободен"})</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-extrabold text-[#414755]">Транспортное средство</label>
+                  <label className="text-[10px] font-extrabold text-slate-700">Спецтехника</label>
                   <select 
                     value={simVehicleId}
                     onChange={(e) => setSimVehicleId(e.target.value)}
                     disabled={simActive}
-                    className="w-full h-8 text-xs bg-white rounded border border-[#e4e2e4] px-2 font-semibold outline-none mt-0.5 cursor-pointer"
+                    className="w-full h-8 text-xs bg-white rounded border border-slate-300 px-2 font-semibold outline-none mt-0.5 cursor-pointer"
                   >
-                    <option value="">Выберите ТС...</option>
+                    <option value="">Выберите машину...</option>
                     {vehicles.map(v => (
                       <option key={v.id} value={v.id}>{v.model} ({v.plateNumber})</option>
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="text-[10px] font-extrabold text-slate-700">Строительный объект</label>
+                  <select 
+                    value={simObjectId}
+                    onChange={(e) => setSimObjectId(e.target.value)}
+                    disabled={simActive}
+                    className="w-full h-8 text-xs bg-white rounded border border-slate-300 px-2 font-semibold outline-none mt-0.5 cursor-pointer"
+                  >
+                    {objects.map(o => (
+                      <option key={o.id} value={o.id}>{o.name} ({o.difficultyType === "MOUNTAIN" ? "1.35x Горный" : "1.0x"})</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Shift Actions Card */}
-              <div className={`p-4 bg-[#f0edef] rounded-xl border border-[#e4e2e4] flex flex-col items-center gap-3 transition-all duration-300 ${
-                simActive ? "border-[#0058bc] bg-white ring-2 ring-[#0058bc]/20" : ""
-              }`}>
-                {/* Status chip */}
-                <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                  simActive ? "bg-[#E5F2FF] text-[#0058bc]" : "bg-[#e4e2e4] text-[#414755]"
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${simActive ? "bg-[#0058bc] animate-ping" : "bg-[#8e8e93]"}`}></span>
-                  <span className="text-[10px] font-bold uppercase tracking-wide">{simStatusText}</span>
+              {/* Status and Action block */}
+              <div className="bg-slate-100 rounded-xl border border-slate-200 p-3 space-y-3 shrink-0">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">Статус трекера</span>
+                  <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide ${
+                    simActive ? "bg-[#10b981]/10 text-[#10b981]" : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {simStatusText}
+                  </span>
                 </div>
 
-                {/* Duration Timer */}
-                <span className="text-4xl font-extrabold tracking-tighter tabular-nums text-[#1b1b1d] select-all">
-                  {formatTimer(simSeconds)}
-                </span>
+                <div className="flex justify-between items-center font-mono font-extrabold text-[#0f172a] text-center text-xl tracking-tight bg-white rounded-lg p-2 border border-slate-200 select-none">
+                  <Clock className="w-5 h-5 text-slate-400" />
+                  <span className="tabular-nums select-none">{formatTimer(simSeconds)}</span>
+                </div>
 
-                {/* START/STOP button */}
-                <button
-                  onClick={handleToggleShift}
-                  disabled={!simDriverId || !simVehicleId}
-                  className={`w-full h-12 rounded-xl font-bold text-sm tracking-wide text-white flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.98] shadow-md select-none cursor-pointer ${
-                    !simDriverId || !simVehicleId 
-                      ? "bg-[#8e8e93] cursor-not-allowed opacity-60" 
-                      : simActive 
-                        ? "bg-[#ba1a1a] hover:bg-[#ba1a1a]/90" 
-                        : "bg-[#0058bc] hover:bg-[#0058bc]/90"
-                  }`}
-                >
-                  {simActive ? (
-                    <>
-                      <Square className="w-4 h-4 fill-current" />
-                      СТОП СМЕНЫ
-                    </>
+                <div className="flex gap-2">
+                  {!simActive ? (
+                    <button 
+                      onClick={handleSimStartShift}
+                      className="flex-1 h-10 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      Начать смену
+                    </button>
                   ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current" />
-                      СТАРТ СМЕНЫ
-                    </>
+                    <button 
+                      onClick={handleSimStopShift}
+                      className="flex-1 h-10 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      Завершить
+                    </button>
                   )}
-                </button>
-              </div>
-
-              {/* Geo summary block */}
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider pl-1">Текущий GPS Статус</span>
-                <div className="bg-[#f0edef] rounded-xl border border-[#e4e2e4] p-3 space-y-2.5 text-xs font-semibold">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 border border-[#e4e2e4] text-[#414755]">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#8e8e93] font-bold">Координаты трансляции</span>
-                      <span className="text-xs text-[#1b1b1d] font-bold mt-0.5">
-                        {GEOLOCATION_PATH[simPathIndex].lat.toFixed(4)}° N, {GEOLOCATION_PATH[simPathIndex].lng.toFixed(4)}° E
-                      </span>
-                      <span className="text-[10px] text-[#0058bc] font-bold mt-1 flex items-center gap-1">
-                        <Navigation className="w-3 h-3 text-[#0058bc] animate-pulse" />
-                        {GEOLOCATION_PATH[simPathIndex].label}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Telemetry block */}
-              <div className="flex flex-col gap-1.5 shrink-0">
-                <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider pl-1">Телеметрия ТС</span>
-                <div className="bg-[#f0edef] rounded-xl border border-[#e4e2e4] p-3 space-y-3 text-xs font-semibold">
-                  
-                  {/* Engine & Distance */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${simActive ? "bg-[#34C759] shadow-[0_0_8px_rgba(52,199,89,0.8)]" : "bg-[#ba1a1a]"}`}></div>
-                      <span className="text-[#1b1b1d] font-bold">{simActive ? "Двигатель заведен" : "Двигатель заглушен"}</span>
-                    </div>
-                    <div className="text-[#414755] font-bold">
-                      {simDistance.toFixed(1)} км
-                    </div>
+              {/* Live Location and Telemetry */}
+              <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 space-y-2 shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Телеметрия GPS & Бак</span>
+                
+                <div className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm text-xs font-semibold">
+                  <div className="p-2 bg-[#f97316]/10 text-[#f97316] rounded-md shrink-0">
+                    <MapPin className="w-4 h-4" />
                   </div>
-
-                  {/* Fuel Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-[10px] font-extrabold text-[#414755] uppercase tracking-wide">
-                      <span className="flex items-center gap-1"><Fuel className="w-3 h-3"/> Топливо</span>
-                      <span className={simFuel < 20 ? "text-[#ba1a1a]" : "text-[#0058bc]"}>{simFuel.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-[#e4e2e4] rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-1000 ${simFuel < 20 ? "bg-[#ba1a1a]" : "bg-[#0058bc]"}`} 
-                        style={{ width: `${Math.max(0, simFuel)}%` }}
-                      ></div>
-                    </div>
-                    <div className="text-[10px] text-[#8e8e93] text-right">~{Math.round((simFuel / 100) * 400)} Л остаток</div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-400 font-bold">Координаты трансляции</span>
+                    <span className="text-xs text-slate-900 font-bold mt-0.5">
+                      {simActive ? GEOLOCATION_PATH[simPathIndex].lat.toFixed(4) : "42.8744"}° N, {simActive ? GEOLOCATION_PATH[simPathIndex].lng.toFixed(4) : "74.5698"}° E
+                    </span>
+                    <span className="text-[9px] text-[#f97316] font-bold mt-1 flex items-center gap-1">
+                      <Navigation className="w-3 h-3 text-[#f97316]" />
+                      {simActive ? GEOLOCATION_PATH[simPathIndex].label : "Депо Западное (Бишкек)"}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Shift Analytics */}
-                  <div className="flex gap-2 pt-1">
-                    <div className="flex-1 bg-white border border-[#e4e2e4] rounded-lg p-2 text-center shadow-sm">
-                      <span className="block text-[9px] text-[#8e8e93] uppercase tracking-wide font-extrabold mb-0.5">В движении</span>
-                      <span className="text-[#0058bc] font-bold tabular-nums">{formatTimer(Math.floor(simSeconds * 0.8))}</span>
-                    </div>
-                    <div className="flex-1 bg-white border border-[#e4e2e4] rounded-lg p-2 text-center shadow-sm">
-                      <span className="block text-[9px] text-[#8e8e93] uppercase tracking-wide font-extrabold mb-0.5">Простой</span>
-                      <span className="text-[#414755] font-bold tabular-nums">{formatTimer(Math.floor(simSeconds * 0.2))}</span>
-                    </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-2 text-xs font-semibold">
+                  <div className="flex justify-between items-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                    <span className="flex items-center gap-1"><Fuel className="w-3.5 h-3.5 text-[#f97316]" /> Топливный датчик</span>
+                    <span className={simFuel < 20 ? "text-red-600 animate-pulse" : "text-[#f97316]"}>{simFuel.toFixed(1)}%</span>
                   </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${simFuel < 20 ? "bg-red-600" : "bg-[#f97316]"}`} 
+                      style={{ width: `${Math.max(0, simFuel)}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center text-[9px] text-slate-400">
+                    <span>~{Math.round((simFuel / 100) * 400)} Л остаток</span>
+                    {simActive && (
+                      <button 
+                        onClick={handleSimulateFuelDrain}
+                        className="text-[9px] text-red-600 hover:underline font-extrabold uppercase flex items-center gap-0.5 border border-red-200 bg-red-50 px-1.5 py-0.5 rounded cursor-pointer"
+                      >
+                        <AlertTriangle className="w-3 h-3 text-red-600" />
+                        Слить топливо
+                      </button>
+                    )}
+                  </div>
+                </div>
 
+                <div className="flex gap-2 text-xs font-bold pt-1">
+                  <div className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-center shadow-sm">
+                    <span className="block text-[8px] text-slate-400 uppercase tracking-wide font-extrabold mb-0.5">В пути</span>
+                    <span className="text-[#f97316] font-bold tabular-nums">{simActive ? simDistance.toFixed(1) : "0.0"} км</span>
+                  </div>
+                  <div className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-center shadow-sm">
+                    <span className="block text-[8px] text-slate-400 uppercase tracking-wide font-extrabold mb-0.5">Текущая ставка</span>
+                    <span className="text-slate-800 font-bold">{simDriverId ? getDriverRate(simDriverId) : "—"} ₽</span>
+                  </div>
                 </div>
               </div>
 
               {/* Personal app shift logs */}
               <div className="flex flex-col gap-1.5 flex-grow">
-                <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider pl-1">Логи водителя в приложении</span>
-                <div className="flex flex-col bg-white border border-[#e4e2e4] rounded-xl divide-y divide-[#e4e2e4] overflow-hidden flex-grow min-h-[140px] text-xs font-semibold">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Архив выполненных смен</span>
+                <div className="flex flex-col bg-white border border-slate-200 rounded-xl divide-y divide-slate-200 overflow-hidden flex-grow min-h-[140px] text-xs font-semibold">
                   {!simDriverId ? (
-                    <div className="flex-grow flex items-center justify-center text-center p-4 text-[#8e8e93]">
-                      Выберите водителя, чтобы загрузить его архив смен
+                    <div className="flex-grow flex items-center justify-center text-center p-4 text-slate-400">
+                      Выберите машиниста, чтобы загрузить архив смен
                     </div>
                   ) : simHistory.length === 0 ? (
-                    <div className="flex-grow flex items-center justify-center text-center p-4 text-[#8e8e93]">
+                    <div className="flex-grow flex items-center justify-center text-center p-4 text-slate-400">
                       Смен не обнаружено в архиве
                     </div>
                   ) : (
                     simHistory.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3">
+                      <div key={idx} className="flex justify-between items-center p-2.5">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Завершено" ? "bg-[#34C759]" : "bg-[#0058bc] animate-pulse"}`}></span>
-                            <span className="font-extrabold text-[#1b1b1d]">{item.date}</span>
+                            <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Завершено" ? "bg-[#10b981]" : "bg-[#f97316] animate-pulse"}`}></span>
+                            <span className="font-extrabold text-slate-800">{item.date}</span>
                           </div>
-                          <span className="text-[10px] text-[#8e8e93] mt-0.5 block">{item.timeRange}</span>
+                          <span className="text-[9px] text-slate-400 mt-0.5 block">{item.timeRange}</span>
                         </div>
                         <div className="text-right">
-                          <span className="font-extrabold text-[#1b1b1d]">{item.duration}</span>
-                          <span className="text-[10px] text-[#8e8e93] block">{item.status}</span>
+                          <span className="font-extrabold text-slate-800">{item.duration}</span>
+                          <span className="text-[9px] text-slate-400 block">{item.status}</span>
                         </div>
                       </div>
                     ))
@@ -1485,54 +1877,54 @@ function MainApp() {
 
       {/* Driver Modal */}
       {driverModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-xl border border-[#e4e2e4] p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-[#1b1b1d] mb-4">
-              {editingDriver ? "Редактировать водителя" : "Добавить нового водителя"}
+        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">
+              {editingDriver ? "Редактировать сотрудника" : "Нанять машиниста в штат"}
             </h3>
             <form onSubmit={handleDriverSubmit} className="space-y-4 text-xs font-bold">
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">ФИО Водителя</label>
+                <label className="block text-slate-300 mb-1 font-bold">ФИО Водителя / Машиниста</label>
                 <input
                   required
                   type="text"
                   value={driverForm.name}
                   onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
-                  placeholder="Иван Иванов"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold"
+                  placeholder="Алексей Петров"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Водительское Удостоверение (ВУ)</label>
+                <label className="block text-slate-300 mb-1 font-bold">Номер удостоверения (ВУ тракториста)</label>
                 <input
                   required
                   type="text"
                   value={driverForm.licenseNumber}
                   onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
-                  placeholder="77 АВ 123456"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold"
+                  placeholder="KG 88 AA 9999"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Номер телефона</label>
+                <label className="block text-slate-300 mb-1 font-bold">Номер телефона</label>
                 <input
                   required
                   type="text"
                   value={driverForm.phone}
                   onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
-                  placeholder="+7 (999) 123-45-67"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold"
+                  placeholder="+996 (555) 12-34-56"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Статус</label>
+                <label className="block text-slate-300 mb-1 font-bold">Текущий статус смены</label>
                 <select
                   value={driverForm.status}
                   onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold cursor-pointer"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="FREE">Свободен</option>
-                  <option value="ACTIVE">В рейсе</option>
+                  <option value="ACTIVE">На смене</option>
                   <option value="OFF">Вне смены</option>
                 </select>
               </div>
@@ -1540,13 +1932,13 @@ function MainApp() {
                 <button
                   type="button"
                   onClick={() => setDriverModalOpen(false)}
-                  className="h-10 px-4 bg-[#f0edef] hover:bg-[#e4e2e4] text-[#1b1b1d] rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#0058bc] hover:bg-[#0070eb] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Сохранить
                 </button>
@@ -1558,51 +1950,64 @@ function MainApp() {
 
       {/* Vehicle Modal */}
       {vehicleModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-xl border border-[#e4e2e4] p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-lg font-bold text-[#1b1b1d] mb-4">
-              {editingVehicle ? "Редактировать ТС" : "Добавить новое ТС"}
+        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">
+              {editingVehicle ? "Редактировать спецтехнику" : "Поставить спецтехнику на баланс"}
             </h3>
             <form onSubmit={handleVehicleSubmit} className="space-y-4 text-xs font-bold">
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Модель ТС</label>
+                <label className="block text-slate-300 mb-1 font-bold">Марка и Модель спецтехники</label>
                 <input
                   required
                   type="text"
                   value={vehicleForm.model}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
-                  placeholder="КАМАЗ 54901"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold"
+                  placeholder="Экскаватор CAT 320"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Государственный номер</label>
+                <label className="block text-slate-300 mb-1 font-bold">Классификация машины</label>
+                <select
+                  value={vehicleForm.machineryType}
+                  onChange={(e) => setVehicleForm({ ...vehicleForm, machineryType: e.target.value })}
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                >
+                  <option value="Гусеничный экскаватор">Гусеничный экскаватор</option>
+                  <option value="Тяжелый кран">Тяжелый кран</option>
+                  <option value="Тяжелый бульдозер">Тяжелый бульдозер</option>
+                  <option value="Фронтальный погрузчик">Фронтальный погрузчик</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Государственный номер</label>
                 <input
                   required
                   type="text"
                   value={vehicleForm.plateNumber}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
-                  placeholder="А123ВС 77"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold"
+                  placeholder="KG 555 ABD"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono uppercase"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">VIN код</label>
+                <label className="block text-slate-300 mb-1 font-bold">VIN код техники</label>
                 <input
                   required
                   type="text"
                   value={vehicleForm.vin}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, vin: e.target.value })}
-                  placeholder="KMZ54901A123BC077"
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold font-mono uppercase"
+                  placeholder="CAT320E999XYZ0001"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono uppercase"
                 />
               </div>
               <div>
-                <label className="block text-[#414755] mb-1 font-bold">Статус ТС</label>
+                <label className="block text-slate-300 mb-1 font-bold">Статус техники</label>
                 <select
                   value={vehicleForm.status}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
-                  className="w-full h-10 px-3 border border-[#e4e2e4] rounded-lg focus:border-[#0058bc] outline-none text-sm font-semibold cursor-pointer"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="ACTIVE">Активен</option>
                   <option value="MAINTENANCE">В ремонте</option>
@@ -1613,13 +2018,13 @@ function MainApp() {
                 <button
                   type="button"
                   onClick={() => setVehicleModalOpen(false)}
-                  className="h-10 px-4 bg-[#f0edef] hover:bg-[#e4e2e4] text-[#1b1b1d] rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#0058bc] hover:bg-[#0070eb] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Сохранить
                 </button>
@@ -1629,235 +2034,292 @@ function MainApp() {
         </div>
       )}
 
-      {/* Slide-over Vehicle Details Drawer */}
+      {/* Object Modal */}
+      {objectModalOpen && (
+        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">Создать строительный объект</h3>
+            <form onSubmit={handleObjectSubmit} className="space-y-4 text-xs font-bold">
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Название объекта</label>
+                <input
+                  required
+                  type="text"
+                  value={objectForm.name}
+                  onChange={(e) => setObjectForm({ ...objectForm, name: e.target.value })}
+                  placeholder="ЖК Ала-Тоо (Бишкек)"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Широта (Latitude)</label>
+                  <input
+                    required
+                    type="number"
+                    step="0.0001"
+                    value={objectForm.latitude}
+                    onChange={(e) => setObjectForm({ ...objectForm, latitude: Number(e.target.value) })}
+                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Долгота (Longitude)</label>
+                  <input
+                    required
+                    type="number"
+                    step="0.0001"
+                    value={objectForm.longitude}
+                    onChange={(e) => setObjectForm({ ...objectForm, longitude: Number(e.target.value) })}
+                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Сложность ландшафта (Надбавка)</label>
+                <select
+                  value={objectForm.difficultyType}
+                  onChange={(e) => setObjectForm({ ...objectForm, difficultyType: e.target.value as "PLAIN" | "MOUNTAIN" })}
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                >
+                  <option value="PLAIN">Равнинный (1.0x)</option>
+                  <option value="MOUNTAIN">Горный сектор (1.35x надбавка)</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setObjectModalOpen(false)}
+                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Order (Wage Decree) Modal */}
+      {orderModalOpen && (
+        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">Выдать приказ о ставке</h3>
+            <form onSubmit={handleOrderSubmit} className="space-y-4 text-xs font-bold">
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Сотрудник (Машинист)</label>
+                <select
+                  value={orderForm.driverId}
+                  onChange={(e) => setOrderForm({ ...orderForm, driverId: e.target.value })}
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                >
+                  <option value="">Выберите водителя...</option>
+                  {drivers.map(d => (
+                    <option key={d.id} value={d.id}>{d.name} (текущая ставка: {d.activeRate} ₽)</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Номер Приказа</label>
+                  <input
+                    required
+                    type="text"
+                    value={orderForm.orderNumber}
+                    onChange={(e) => setOrderForm({ ...orderForm, orderNumber: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1 font-bold">Дата Вступления в силу</label>
+                  <input
+                    required
+                    type="date"
+                    value={orderForm.dateEffective}
+                    onChange={(e) => setOrderForm({ ...orderForm, dateEffective: e.target.value })}
+                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-slate-300 mb-1 font-bold">Новая ставка (руб/час)</label>
+                <input
+                  required
+                  type="number"
+                  value={orderForm.newRate}
+                  onChange={(e) => setOrderForm({ ...orderForm, newRate: Number(e.target.value) })}
+                  placeholder="850"
+                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderModalOpen(false)}
+                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                >
+                  Оформить приказ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* V2 Slide-over Vehicle Details Drawer */}
       {selectedVehicle && (() => {
-        // Find active driver if any
         const isActiveSimVehicle = simActive && simVehicleId === selectedVehicle.id;
         
-        let driverName = "Нет водителя";
-        let driverId = "";
-        let fuelRemaining = 100;
-        let fuelLitres = 400;
-        let shiftTime = "00:00:00";
+        let driverName = "Вне смены";
+        let fuelRemaining = 85.0;
+        let fuelLitres = 340;
+        let shiftTime = "Вне смены";
         let speed = 0;
         let distance = 0;
-        // let isEngineRunning = false;
-        let consumptionRate = 0;
-        let events = [];
-        let driverPhoto = "D";
+        let consumptionRate = 31.8;
+        let events = [{ time: "Вчера", text: "Смена завершена на объекте ЖК Ала-Тоо." }];
+        let driverPhoto = "—";
 
         if (isActiveSimVehicle) {
           const simDriver = drivers.find(d => d.id === simDriverId);
           driverName = simDriver ? simDriver.name : "Иван Иванов";
-          driverId = simDriverId;
           fuelRemaining = simFuel;
           fuelLitres = Math.round((simFuel / 100) * 400);
           shiftTime = formatTimer(simSeconds);
-          speed = 65;
+          speed = 35;
           distance = simDistance;
-          // isEngineRunning = true;
           consumptionRate = 31.8;
           events = [
-            { time: "10 мин назад", text: "Прохождение контрольной точки: " + GEOLOCATION_PATH[Math.max(0, simPathIndex - 1)].label },
-            { time: "В начале смены", text: "Смена успешно начата водительским клиентом" }
+            { time: "Только что", text: `ТС на смене, объект: ЖК Ала-Тоо` },
+            { time: "Смена начата", text: "Сигнал телеметрии GPS и уровня бака стабилен" }
           ];
           driverPhoto = driverName.split(" ").map(w=>w[0]).join("");
-        } else if (selectedVehicle.id === "v3" || selectedVehicle.id === "v1") {
-          // Mock data for the Scania or KAMAZ active mock shifts
+        } else if (selectedVehicle.id === "v3") {
           driverName = "Сергей Смирнов";
-          driverId = "d2";
           fuelRemaining = 68.5;
           fuelLitres = 274;
           shiftTime = "05:42:15";
-          speed = 72;
-          distance = 284.4;
-          // isEngineRunning = true;
-          consumptionRate = 29.5;
+          speed = 0;
+          distance = 42.1;
+          consumptionRate = 36.5;
           events = [
-            { time: "12:45", text: "Предупреждение: Превышение скорости (92 км/ч)" },
-            { time: "10:15", text: "Остановка на отдых (15 мин)" },
-            { time: "08:30", text: "Начало смены (Депо А)" }
+            { time: "12:45", text: "Установка опор автокрана верифицирована датчиками" },
+            { time: "10:15", text: "Остановка на объекте Трасса Бишкек-Ош" },
+            { time: "08:30", text: "Начало смены (База)" }
           ];
           driverPhoto = "СС";
-        } else {
-          // Off shift vehicle
-          fuelRemaining = selectedVehicle.status === "MAINTENANCE" ? 45.0 : 85.0;
-          fuelLitres = Math.round((fuelRemaining / 100) * 400);
-          shiftTime = "Вне смены";
-          speed = 0;
-          distance = 0;
-          // isEngineRunning = false;
-          consumptionRate = 0;
-          events = [
-            { time: "Вчера", text: "Смена завершена в Депо А. Общий пробег: 182 км" }
-          ];
         }
 
         return (
           <>
-            {/* Backdrop */}
-            <div 
-              onClick={() => setSelectedVehicle(null)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] transition-opacity"
-            ></div>
-            
-            {/* Drawer Container */}
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-white border-l border-[#e4e2e4] shadow-2xl z-[120] flex flex-col transition-all duration-300 transform animate-fadeIn">
-              
-              {/* Header */}
-              <div className="p-5 border-b border-[#e4e2e4] flex justify-between items-center bg-[#fcf8fb]">
+            <div onClick={() => setSelectedVehicle(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-[#0058bc]/10 rounded-xl text-[#0058bc]">
+                  <div className="p-2.5 bg-[#f97316]/10 rounded-xl text-[#f97316]">
                     <Truck className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-[#1b1b1d] tracking-tight">{selectedVehicle.model}</h3>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs font-mono bg-[#f0edef] text-[#414755] px-1.5 py-0.5 rounded font-bold">{selectedVehicle.plateNumber}</span>
-                      <span className="text-[10px] font-mono text-[#8e8e93] font-bold">VIN: {selectedVehicle.vin}</span>
-                    </div>
+                    <h3 className="font-extrabold text-base text-white">{selectedVehicle.model}</h3>
+                    <span className="text-xs font-mono bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded font-bold border border-slate-800">{selectedVehicle.plateNumber}</span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedVehicle(null)}
-                  className="p-2 text-[#717786] hover:text-[#1b1b1d] hover:bg-[#f0edef] transition-colors rounded-full cursor-pointer"
-                >
+                <button onClick={() => setSelectedVehicle(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Scrollable Content */}
               <div className="flex-grow overflow-y-auto p-5 space-y-6">
                 
-                {/* Status Indicator */}
-                <div className="flex justify-between items-center bg-[#f6f3f5] p-3 rounded-xl border border-[#e4e2e4]">
-                  <span className="text-xs font-bold text-[#414755] uppercase tracking-wide">Статус ТС</span>
-                  {selectedVehicle.status === "ACTIVE" ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F8EE] text-[#34C759] text-xs font-extrabold shadow-sm">
-                      <span className="w-1.5 h-1.5 bg-[#34C759] rounded-full animate-pulse"></span>
-                      На смене / Активен
-                    </span>
-                  ) : selectedVehicle.status === "MAINTENANCE" ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF9500]/10 text-[#FF9500] text-xs font-extrabold border border-[#FF9500]/20 shadow-sm">
-                      В ремонте
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0edef] text-[#8e8e93] text-xs font-extrabold border border-[#e4e2e4] shadow-sm">
-                      Списан
-                    </span>
-                  )}
+                {/* Documents list manager */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Документы Спецтехники (СТС/ПТС)</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedVehicle.documents?.map((doc, idx) => (
+                      <div key={idx} className="p-3 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between hover:border-[#f97316]/40 transition-colors">
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-5 h-5 text-[#f97316]" />
+                          <div>
+                            <span className="block text-xs font-bold text-white">{doc.name}</span>
+                            <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
+                          </div>
+                        </div>
+                        <button className="text-[10px] text-[#f97316] font-bold uppercase hover:underline">Скачать PDF</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Driver on Shift Info */}
+                {/* Active driver */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold text-[#414755] uppercase tracking-wider pl-1">Водитель на смене</h4>
-                  <div className="p-4 bg-white border border-[#e4e2e4] rounded-xl flex items-center justify-between shadow-sm">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Машинист на смене</h4>
+                  <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-full bg-[#0058bc]/10 text-[#0058bc] flex items-center justify-center font-extrabold text-sm border border-[#0058bc]/20">
+                      <div className="w-10 h-10 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-xs border border-[#f97316]/20">
                         {driverPhoto}
                       </div>
                       <div>
-                        <span className="block font-bold text-sm text-[#1b1b1d]">{driverName}</span>
-                        <span className="text-[11px] text-[#8e8e93] font-bold block mt-0.5">ID: {driverId || "—"}</span>
+                        <span className="block font-bold text-sm text-white">{driverName}</span>
                       </div>
                     </div>
-                    {driverId ? (
-                      <span className="text-[10px] font-bold bg-[#0058bc]/10 text-[#0058bc] px-2.5 py-1 rounded-full uppercase tracking-wide">
-                        В рейсе
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold bg-[#e4e2e4] text-[#717786] px-2.5 py-1 rounded-full uppercase tracking-wide">
-                        Свободен
-                      </span>
-                    )}
                   </div>
+                </div>
+
+                {/* Fuel gauge */}
+                <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl space-y-3">
+                  <div className="flex justify-between items-center text-xs font-bold text-[#94a3b8] uppercase">
+                    <span className="flex items-center gap-1"><Fuel className="w-4 h-4 text-[#f97316]" /> Датчик уровня бака</span>
+                    <span className={fuelRemaining < 20 ? "text-red-500 font-extrabold" : "text-[#f97316]"}>{fuelRemaining.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div className={`h-full ${fuelRemaining < 20 ? "bg-red-500" : "bg-[#f97316]"}`} style={{ width: `${fuelRemaining}%` }}></div>
+                  </div>
+                  <div className="text-[11px] text-[#64748b] font-bold">Остаток бака: ~{fuelLitres} Л</div>
                 </div>
 
                 {/* Shift Details */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold text-[#414755] uppercase tracking-wider pl-1">Метрики смены</h4>
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Метрики смены</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    
-                    <div className="p-3.5 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-1">
-                      <span className="text-[10px] text-[#8e8e93] font-bold uppercase tracking-wider block">Длительность</span>
-                      <span className="text-lg font-extrabold text-[#1b1b1d] block tabular-nums">{shiftTime}</span>
+                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                      <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Длительность</span>
+                      <span className="text-sm font-extrabold text-white block tabular-nums">{shiftTime}</span>
                     </div>
-
-                    <div className="p-3.5 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-1">
-                      <span className="text-[10px] text-[#8e8e93] font-bold uppercase tracking-wider block">Дистанция</span>
-                      <span className="text-lg font-extrabold text-[#1b1b1d] block tabular-nums">
-                        {distance > 0 ? `${distance.toFixed(1)} км` : "0.0 км"}
-                      </span>
+                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                      <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Дистанция</span>
+                      <span className="text-sm font-extrabold text-white block tabular-nums">{distance.toFixed(1)} км</span>
                     </div>
-
-                    <div className="p-3.5 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-1">
-                      <span className="text-[10px] text-[#8e8e93] font-bold uppercase tracking-wider block">Скорость</span>
-                      <span className="text-lg font-extrabold text-[#1b1b1d] flex items-center gap-1.5">
-                        <Activity className={`w-4 h-4 ${speed > 0 ? "text-[#34C759] animate-pulse" : "text-[#717786]"}`} />
-                        <span className="tabular-nums">{speed} км/ч</span>
-                      </span>
+                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                      <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Расход</span>
+                      <span className="text-sm font-extrabold text-white block tabular-nums">{consumptionRate} л/100км</span>
                     </div>
-
-                    <div className="p-3.5 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-1">
-                      <span className="text-[10px] text-[#8e8e93] font-bold uppercase tracking-wider block">Расход топлива</span>
-                      <span className="text-lg font-extrabold text-[#1b1b1d] block tabular-nums">
-                        {consumptionRate > 0 ? `${consumptionRate.toFixed(1)} л/100км` : "—"}
-                      </span>
+                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                      <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Скорость</span>
+                      <span className="text-sm font-extrabold text-white block tabular-nums">{speed} км/ч</span>
                     </div>
-
                   </div>
                 </div>
-
-                {/* Fuel Tank Status */}
-                <div className="p-4 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-3">
-                  <div className="flex justify-between items-center text-xs font-bold text-[#414755] uppercase tracking-wider">
-                    <span className="flex items-center gap-1"><Fuel className="w-4 h-4 text-[#0058bc]" /> Уровень топлива</span>
-                    <span className={fuelRemaining < 20 ? "text-[#ba1a1a]" : "text-[#0058bc]"}>{fuelRemaining.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-[#e4e2e4] rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-1000 ${fuelRemaining < 20 ? "bg-[#ba1a1a]" : "bg-[#0058bc]"}`}
-                      style={{ width: `${Math.max(0, fuelRemaining)}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px] text-[#8e8e93] font-bold">
-                    <span>Остаток: ~{fuelLitres} Л</span>
-                    {fuelRemaining < 20 && (
-                      <span className="text-[#ba1a1a] font-extrabold flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5" /> Требуется заправка!
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Live Geolocation */}
-                {isActiveSimVehicle && (
-                  <div className="p-4 bg-white border border-[#e4e2e4] rounded-xl shadow-sm space-y-2">
-                    <span className="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider block">Текущая геолокация LIVE</span>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#0058bc]/10 rounded-lg text-[#0058bc]">
-                        <MapPin className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-mono font-bold block text-[#1b1b1d]">
-                          {GEOLOCATION_PATH[simPathIndex].lat.toFixed(5)}° N, {GEOLOCATION_PATH[simPathIndex].lng.toFixed(5)}° E
-                        </span>
-                        <span className="text-[11px] font-bold text-[#0058bc] block mt-0.5">
-                          {GEOLOCATION_PATH[simPathIndex].label}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Events Log */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold text-[#414755] uppercase tracking-wider pl-1">Лента событий ТС</h4>
-                  <div className="border border-[#e4e2e4] rounded-xl divide-y divide-[#e4e2e4] overflow-hidden bg-white shadow-sm">
-                    {events.map((ev, idx) => (
-                      <div key={idx} className="p-3 text-xs font-semibold flex justify-between items-start gap-4">
-                        <span className="text-[#1b1b1d] leading-tight">{ev.text}</span>
-                        <span className="text-[10px] text-[#8e8e93] shrink-0 font-bold">{ev.time}</span>
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Лог событий ТС</h4>
+                  <div className="border border-[#334155] rounded-xl divide-y divide-[#334155] overflow-hidden bg-[#0f172a]/40">
+                    {events.map((ev, i) => (
+                      <div key={i} className="p-3 text-xs font-semibold flex justify-between items-start gap-4 text-slate-300">
+                        <span>{ev.text}</span>
+                        <span className="text-[10px] text-[#64748b] shrink-0 font-mono">{ev.time}</span>
                       </div>
                     ))}
                   </div>
@@ -1865,16 +2327,162 @@ function MainApp() {
 
               </div>
 
-              {/* Footer action */}
-              <div className="p-4 border-t border-[#e4e2e4] bg-[#fcf8fb] flex gap-2">
-                <button
-                  onClick={() => setSelectedVehicle(null)}
-                  className="flex-1 h-11 bg-[#f0edef] hover:bg-[#e4e2e4] text-[#1b1b1d] font-bold text-sm rounded-xl transition-colors cursor-pointer"
-                >
+              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
+                <button onClick={() => setSelectedVehicle(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
                   Закрыть
                 </button>
               </div>
+            </div>
+          </>
+        );
+      })()}
 
+      {/* V2 Slide-over Driver (Employee) Details Drawer */}
+      {selectedDriver && (() => {
+        return (
+          <>
+            <div onClick={() => setSelectedDriver(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-sm border border-[#f97316]/20">
+                    {selectedDriver.name.split(" ").map(w=>w[0]).join("")}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-white">{selectedDriver.name}</h3>
+                    <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">ВУ тракториста: {selectedDriver.licenseNumber}</span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedDriver(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-grow overflow-y-auto p-5 space-y-6">
+                
+                {/* Permits & Categories list */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Допуски к спецтехнике</h4>
+                  <div className="flex flex-wrap gap-1.5 p-3.5 bg-[#0f172a]/40 border border-[#334155] rounded-xl">
+                    {selectedDriver.permitCategories?.map((cat, idx) => (
+                      <span key={idx} className="text-xs bg-[#f97316]/15 text-[#f97316] border border-[#f97316]/20 px-3 py-1 rounded-full font-bold">
+                        {cat}
+                      </span>
+                    )) || <span className="text-slate-400 text-xs">—</span>}
+                  </div>
+                </div>
+
+                {/* Driver Document Manger */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Личные Документы машиниста</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedDriver.documents?.map((doc, idx) => (
+                      <div key={idx} className="p-3 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between hover:border-[#f97316]/40 transition-colors">
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-5 h-5 text-[#f97316]" />
+                          <div>
+                            <span className="block text-xs font-bold text-white">{doc.name}</span>
+                            <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
+                          </div>
+                        </div>
+                        <button className="text-[10px] text-[#f97316] font-bold uppercase hover:underline">Просмотр</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rate History Decrees Timeline (V2) */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">История часовых ставок (Приказы)</h4>
+                  <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl space-y-3.5 relative">
+                    {selectedDriver.rateHistory?.map((hist, idx) => (
+                      <div key={idx} className="flex justify-between items-start gap-4 text-xs">
+                        <div className="space-y-1">
+                          <span className="block font-bold text-white text-xs">{hist.reason}</span>
+                          <span className="text-[10px] text-[#64748b] block font-mono">{hist.date}</span>
+                        </div>
+                        <span className="text-[#f97316] font-extrabold text-sm whitespace-nowrap">{hist.rate} ₽/ч</span>
+                      </div>
+                    )) || <span className="text-slate-400 text-xs">—</span>}
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
+                <button onClick={() => setSelectedDriver(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* V2 Slide-over Object Details Drawer */}
+      {selectedObject && (() => {
+        return (
+          <>
+            <div onClick={() => setSelectedObject(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-[#f97316]/10 rounded-xl text-[#f97316]">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-white">{selectedObject.name}</h3>
+                    <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">Координаты: {selectedObject.latitude.toFixed(4)}° N, {selectedObject.longitude.toFixed(4)}° E</span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedObject(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-grow overflow-y-auto p-5 space-y-6">
+                
+                {/* Terrain difficulty info */}
+                <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300 uppercase">Условия местности</span>
+                  {selectedObject.difficultyType === "MOUNTAIN" ? (
+                    <span className="bg-red-500/20 text-red-400 font-extrabold text-xs px-3 py-1 rounded-full border border-red-500/30 uppercase">
+                      Горный сектор (надбавка 1.35x)
+                    </span>
+                  ) : (
+                    <span className="bg-blue-500/10 text-blue-400 font-extrabold text-xs px-3 py-1 rounded-full border border-blue-500/20 uppercase">
+                      Равнинный (стандарт 1.0x)
+                    </span>
+                  )}
+                </div>
+
+                {/* Assigned machinery and employees */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Активная спецтехника на объекте</h4>
+                  <div className="p-4 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-3">
+                    {selectedObject.id === "o2" ? (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-white">Кран Liebherr LTM 1050</span>
+                        <span className="text-[#94a3b8]">Сергей Смирнов</span>
+                      </div>
+                    ) : selectedObject.id === "o1" && simActive && simObjectId === "o1" ? (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-bold text-white">Экскаватор CAT 320</span>
+                        <span className="text-[#94a3b8]">{drivers.find(d=>d.id === simDriverId)?.name || "Иван Иванов"}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-[#64748b] block text-center">Спецтехника в смене отсутствует</span>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
+                <button onClick={() => setSelectedObject(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+                  Закрыть
+                </button>
+              </div>
             </div>
           </>
         );
