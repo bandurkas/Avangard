@@ -17,6 +17,7 @@ import {
   Fuel, 
   Wrench, 
   TrendingUp, 
+  Paperclip,
   Navigation,
   RefreshCw,
   Info,
@@ -163,7 +164,7 @@ function MainApp() {
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
   const [activeViewDoc, setActiveViewDoc] = useState<{ name: string; file: string; type?: string } | null>(null);
   const [attachmentWizardOpen, setAttachmentWizardOpen] = useState(false);
-  const [attachmentTarget, setAttachmentTarget] = useState<{ type: "driver" | "vehicle"; id: string } | null>(null);
+  const [attachmentTarget, setAttachmentTarget] = useState<{ type: "driver" | "vehicle" | "driver_form" | "vehicle_form"; id: string } | null>(null);
   const [attachmentForm, setAttachmentForm] = useState({ name: "", type: "СТС", file: "" });
 
   const [driverForm, setDriverForm] = useState({ 
@@ -175,7 +176,8 @@ function MainApp() {
     experienceYears: "",
     licenseCategories: "B, C",
     medCertificateExpiry: "",
-    specialPermits: ""
+    specialPermits: "",
+    documents: [] as { name: string; type: string; file: string }[]
   });
 
   const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
@@ -193,7 +195,8 @@ function MainApp() {
     enginePower: "",
     lastServiceDate: "",
     insuranceNumber: "",
-    ptnNumber: ""
+    ptnNumber: "",
+    documents: [] as { name: string; type: string; file: string }[]
   });
 
   const [objectModalOpen, setObjectModalOpen] = useState(false);
@@ -618,7 +621,15 @@ function MainApp() {
       file: mockFile
     };
 
-    if (attachmentTarget.type === "driver") {
+    if (attachmentTarget.type === "driver_form") {
+      const updatedDocs = [...(driverForm.documents || []), newDoc];
+      setDriverForm({ ...driverForm, documents: updatedDocs });
+      showNotification("Документ временно прикреплен к форме. Сохраните изменения!", "success");
+    } else if (attachmentTarget.type === "vehicle_form") {
+      const updatedDocs = [...(vehicleForm.documents || []), newDoc];
+      setVehicleForm({ ...vehicleForm, documents: updatedDocs });
+      showNotification("Документ временно прикреплен к форме. Сохраните изменения!", "success");
+    } else if (attachmentTarget.type === "driver") {
       const driverObj = drivers.find(d => d.id === attachmentTarget.id);
       if (driverObj) {
         const updatedDocs = [...(driverObj.documents || []), newDoc];
@@ -723,7 +734,8 @@ function MainApp() {
                       experienceYears: "",
                       licenseCategories: "B, C",
                       medCertificateExpiry: "",
-                      specialPermits: ""
+                      specialPermits: "",
+                      documents: []
                     });
                     setDriverModalOpen(true);
                   } else if (activeTab === "vehicles") {
@@ -741,7 +753,8 @@ function MainApp() {
                       enginePower: "",
                       lastServiceDate: "",
                       insuranceNumber: "",
-                      ptnNumber: ""
+                      ptnNumber: "",
+                      documents: []
                     });
                     setVehicleModalOpen(true);
                   } else if (activeTab === "objects") {
@@ -1250,7 +1263,8 @@ function MainApp() {
                                     experienceYears: d.experienceYears ? String(d.experienceYears) : "",
                                     licenseCategories: d.licenseCategories || "B, C",
                                     medCertificateExpiry: d.medCertificateExpiry || "",
-                                    specialPermits: d.specialPermits || ""
+                                    specialPermits: d.specialPermits || "",
+                                    documents: d.documents || []
                                   });
                                   setDriverModalOpen(true);
                                 }}
@@ -1376,7 +1390,8 @@ function MainApp() {
                                     enginePower: v.enginePower ? String(v.enginePower) : "",
                                     lastServiceDate: v.lastServiceDate || "",
                                     insuranceNumber: v.insuranceNumber || "",
-                                    ptnNumber: v.ptnNumber || ""
+                                    ptnNumber: v.ptnNumber || "",
+                                    documents: v.documents || []
                                   });
                                   setVehicleModalOpen(true);
                                 }}
@@ -2135,20 +2150,60 @@ function MainApp() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
+              {/* Display list of currently staged documents with a delete icon */}
+              {driverForm.documents && driverForm.documents.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-[#00417d]/20">
+                  <label className="block text-slate-400 text-[10px] uppercase font-black tracking-wider">Прикрепленные документы / файлы</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {driverForm.documents.map((doc, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-[#09142d] border border-[#00417d]/30 rounded-lg text-[10px] text-white animate-fadeIn">
+                        <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
+                        <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = driverForm.documents.filter((_, i) => i !== idx);
+                            setDriverForm({ ...driverForm, documents: updated });
+                          }}
+                          className="text-slate-400 hover:text-red-400 cursor-pointer transition-colors ml-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2 border-t border-[#00417d]/20">
                 <button
                   type="button"
-                  onClick={() => setDriverModalOpen(false)}
-                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  onClick={() => {
+                    setAttachmentTarget({ type: "driver_form", id: editingDriver?.id || "new" });
+                    setAttachmentForm({ name: "", type: "Водительское Удостоверение", file: "" });
+                    setAttachmentWizardOpen(true);
+                  }}
+                  className="h-10 px-4 bg-[#38a6e4]/10 hover:bg-[#38a6e4]/20 border border-[#38a6e4]/20 text-[#38a6e4] rounded-lg transition-colors font-bold text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
                 >
-                  Отмена
+                  <Paperclip className="w-4 h-4" />
+                  Прикрепить
                 </button>
-                <button
-                  type="submit"
-                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
-                >
-                  Сохранить
-                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDriverModalOpen(false)}
+                    className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  >
+                    Сохранить
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -2303,20 +2358,60 @@ function MainApp() {
                   </select>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
+              {/* Display list of currently staged documents with a delete icon */}
+              {vehicleForm.documents && vehicleForm.documents.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-[#00417d]/20">
+                  <label className="block text-slate-400 text-[10px] uppercase font-black tracking-wider">Прикрепленные документы / файлы</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {vehicleForm.documents.map((doc, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-[#09142d] border border-[#00417d]/30 rounded-lg text-[10px] text-white animate-fadeIn">
+                        <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
+                        <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = vehicleForm.documents.filter((_, i) => i !== idx);
+                            setVehicleForm({ ...vehicleForm, documents: updated });
+                          }}
+                          className="text-slate-400 hover:text-red-400 cursor-pointer transition-colors ml-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2 border-t border-[#00417d]/20">
                 <button
                   type="button"
-                  onClick={() => setVehicleModalOpen(false)}
-                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  onClick={() => {
+                    setAttachmentTarget({ type: "vehicle_form", id: editingVehicle?.id || "new" });
+                    setAttachmentForm({ name: "", type: "СТС", file: "" });
+                    setAttachmentWizardOpen(true);
+                  }}
+                  className="h-10 px-4 bg-[#38a6e4]/10 hover:bg-[#38a6e4]/20 border border-[#38a6e4]/20 text-[#38a6e4] rounded-lg transition-colors font-bold text-sm flex items-center gap-2 cursor-pointer active:scale-95 transition-all"
                 >
-                  Отмена
+                  <Paperclip className="w-4 h-4" />
+                  Прикрепить
                 </button>
-                <button
-                  type="submit"
-                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
-                >
-                  Сохранить
-                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVehicleModalOpen(false)}
+                    className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  >
+                    Сохранить
+                  </button>
+                </div>
               </div>
             </form>
           </div>
