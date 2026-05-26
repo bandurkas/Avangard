@@ -2157,8 +2157,14 @@ function MainApp() {
                   <div className="flex flex-wrap gap-1.5">
                     {driverForm.documents.map((doc, idx) => (
                       <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-[#09142d] border border-[#00417d]/30 rounded-lg text-[10px] text-white animate-fadeIn">
-                        <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
-                        <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveViewDoc(doc)}
+                          className="flex items-center gap-1.5 hover:text-[#38a6e4] transition-colors cursor-pointer text-left"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
+                          <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
@@ -2365,8 +2371,14 @@ function MainApp() {
                   <div className="flex flex-wrap gap-1.5">
                     {vehicleForm.documents.map((doc, idx) => (
                       <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-[#09142d] border border-[#00417d]/30 rounded-lg text-[10px] text-white animate-fadeIn">
-                        <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
-                        <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveViewDoc(doc)}
+                          className="flex items-center gap-1.5 hover:text-[#38a6e4] transition-colors cursor-pointer text-left"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-[#38a6e4]" />
+                          <span className="font-bold truncate max-w-[150px]">{doc.name}</span>
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
