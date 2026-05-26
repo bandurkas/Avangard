@@ -572,7 +572,7 @@ function MainApp() {
   };
 
   return (
-    <div className="bg-[#0f172a] text-[#f8fafc] font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full selection:bg-[#f97316] selection:text-white">
+    <div className="bg-[#00091b] text-[#f8fafc] font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full selection:bg-[#38a6e4] selection:text-white">
       
       {/* Dynamic Toast Alerts */}
       {alertMsg && (
@@ -585,19 +585,30 @@ function MainApp() {
       )}
 
       {/* Main Dispatcher Dashboard Area (72% standard) */}
-      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r border-[#334155] bg-[#0f172a]">
+      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r border-[#00417d]/30 bg-[#00091b]">
         
         {/* Workspace Brand and Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="bg-[#f97316] text-white px-2 py-0.5 text-xs font-bold rounded shadow-sm">ERP V2.0 PRO</span>
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#f8fafc] flex items-center gap-2">
-                <Truck className="w-7 h-7 text-[#f97316]" />
-                АВАНГАРД <span className="text-[#f97316] font-light">Heavy Machinery</span>
-              </h1>
+            <div className="flex items-center gap-3">
+              <span className="bg-[#eab308] text-slate-950 px-2 py-0.5 text-[10px] font-black rounded shadow-md uppercase tracking-wider">ERP V2.0 PRO</span>
+              <div className="flex items-center gap-3">
+                {/* Authentic Avangard logo styled SVG */}
+                <svg className="w-9 h-9 text-[#38a6e4]" viewBox="0 0 100 100" fill="currentColor">
+                  {/* Outer 'A' geometry */}
+                  <polygon points="50,10 12,90 40,90 50,68 60,90 88,90" fill="#00417D" />
+                  {/* Dynamic brand lightning slash */}
+                  <polygon points="5,82 95,25 90,15 0,72" fill="#38a6e4" />
+                </svg>
+                <div>
+                  <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-1.5 font-['Montserrat']">
+                    AVANGARD <span className="text-[#38a6e4] font-medium text-lg uppercase tracking-widest">Style</span>
+                  </h1>
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#eab308] block -mt-1 font-mono">Specialized Machinery ERP</span>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-[#94a3b8] mt-1 font-semibold">Центральная система управления спецтехникой, объектами и Payroll • Кыргызстан</p>
+            <p className="text-xs text-[#94a3b8] mt-1.5 font-semibold pl-1">Центральная система управления спецтехникой, объектами и Payroll • Кыргызстан</p>
           </div>
           <div className="flex gap-2">
             {(activeTab === "drivers" || activeTab === "vehicles" || activeTab === "objects" || activeTab === "payroll") && (
@@ -619,7 +630,7 @@ function MainApp() {
                     setOrderModalOpen(true);
                   }
                 }}
-                className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white font-bold text-sm rounded-xl flex items-center gap-2 hover:shadow-md transition-all active:scale-95 cursor-pointer shadow-lg"
+                className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white font-bold text-sm rounded-xl flex items-center gap-2 hover:shadow-md transition-all active:scale-95 cursor-pointer shadow-lg"
               >
                 <Plus className="w-4 h-4" />
                 {activeTab === "drivers" && "Нанять водителя"}
@@ -632,12 +643,12 @@ function MainApp() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-[#334155] mb-6 overflow-x-auto whitespace-nowrap scrollbar-thin">
+        <div className="flex border-b border-[#00417d]/30 mb-6 overflow-x-auto whitespace-nowrap scrollbar-thin">
           <button
             onClick={() => setActiveTab("overview")}
             className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "overview"
-                ? "border-[#f97316] text-[#f97316]"
+                ? "border-[#38a6e4] text-[#38a6e4]"
                 : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
@@ -648,7 +659,7 @@ function MainApp() {
             onClick={() => setActiveTab("drivers")}
             className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "drivers"
-                ? "border-[#f97316] text-[#f97316]"
+                ? "border-[#38a6e4] text-[#38a6e4]"
                 : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
@@ -659,7 +670,7 @@ function MainApp() {
             onClick={() => setActiveTab("vehicles")}
             className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "vehicles"
-                ? "border-[#f97316] text-[#f97316]"
+                ? "border-[#38a6e4] text-[#38a6e4]"
                 : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
@@ -670,7 +681,7 @@ function MainApp() {
             onClick={() => setActiveTab("objects")}
             className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "objects"
-                ? "border-[#f97316] text-[#f97316]"
+                ? "border-[#38a6e4] text-[#38a6e4]"
                 : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
@@ -681,7 +692,7 @@ function MainApp() {
             onClick={() => setActiveTab("payroll")}
             className={`px-5 py-3 font-bold text-sm tracking-wide transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === "payroll"
-                ? "border-[#f97316] text-[#f97316]"
+                ? "border-[#38a6e4] text-[#38a6e4]"
                 : "border-transparent text-[#94a3b8] hover:text-[#f8fafc]"
             }`}
           >
@@ -728,9 +739,9 @@ function MainApp() {
             {/* Metric Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {/* Card 1 */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
+                  <div className="p-2 bg-[#38a6e4]/10 rounded-lg border border-[#38a6e4]/20 text-[#38a6e4]">
                     <Users className="w-5 h-5" />
                   </div>
                   <span className="inline-flex items-center gap-1 text-[#10b981] font-bold text-xs bg-[#10b981]/10 px-2 py-0.5 rounded-full">
@@ -743,9 +754,9 @@ function MainApp() {
                 </div>
               </div>
               {/* Card 2 */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
+                  <div className="p-2 bg-[#38a6e4]/10 rounded-lg border border-[#38a6e4]/20 text-[#38a6e4]">
                     <Truck className="w-5 h-5" />
                   </div>
                   <span className="inline-flex items-center gap-1 text-[#94a3b8] font-bold text-xs bg-[#334155] px-2 py-0.5 rounded-full">
@@ -758,25 +769,25 @@ function MainApp() {
                 </div>
               </div>
               {/* Card 3 */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
+                  <div className="p-2 bg-[#38a6e4]/10 rounded-lg border border-[#38a6e4]/20 text-[#38a6e4]">
                     <Fuel className="w-5 h-5" />
                   </div>
-                  <div className="w-16 h-8 bg-slate-800 border border-[#334155] rounded flex items-end justify-between px-1 pb-1">
-                    <div className="w-1.5 h-3 bg-[#f97316]/30 rounded-t-sm"></div>
-                    <div className="w-1.5 h-4 bg-[#f97316]/30 rounded-t-sm"></div>
-                    <div className="w-1.5 h-2 bg-[#f97316]/30 rounded-t-sm"></div>
-                    <div className="w-1.5 h-5 bg-[#f97316]/30 rounded-t-sm"></div>
-                    <div className="w-1.5 h-6 bg-[#f97316] rounded-t-sm animate-pulse"></div>
+                  <div className="w-16 h-8 bg-[#0c1e43] border border-[#00417d]/30 rounded flex items-end justify-between px-1 pb-1">
+                    <div className="w-1.5 h-3 bg-[#38a6e4]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-4 bg-[#38a6e4]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-2 bg-[#38a6e4]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-5 bg-[#38a6e4]/30 rounded-t-sm"></div>
+                    <div className="w-1.5 h-6 bg-[#38a6e4] rounded-t-sm animate-pulse"></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Ср. расход ГСМ парка</p>
-                    <div className="group/tooltip relative cursor-pointer text-[#64748b] hover:text-[#f97316]">
+                    <div className="group/tooltip relative cursor-pointer text-[#64748b] hover:text-[#38a6e4]">
                       <Info className="w-3.5 h-3.5" />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#1e293b] border border-[#334155] text-white text-[10px] font-semibold rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 text-center leading-normal">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#0c1e43]/90 border border-[#00417d]/30 text-white text-[10px] font-semibold rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 text-center leading-normal">
                         Агрегированный средний расход спецтехники по активным сменам
                       </div>
                     </div>
@@ -785,12 +796,12 @@ function MainApp() {
                 </div>
               </div>
               {/* Card 4 */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="p-2 bg-[#f97316]/10 rounded-lg border border-[#f97316]/20 text-[#f97316]">
+                  <div className="p-2 bg-[#38a6e4]/10 rounded-lg border border-[#38a6e4]/20 text-[#38a6e4]">
                     <Map className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[#f97316] font-bold text-xs bg-[#f97316]/10 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[#38a6e4] font-bold text-xs bg-[#38a6e4]/10 px-2 py-0.5 rounded-full">
                     Активные
                   </span>
                 </div>
@@ -805,8 +816,8 @@ function MainApp() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Map Canvas Card */}
-              <div className="lg:col-span-2 bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
+              <div className="lg:col-span-2 bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl overflow-hidden flex flex-col h-[420px]">
+                <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
                   <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Схема строительных объектов (Бишкек LIVE)</h3>
                   <div className="flex items-center gap-1.5 text-[#10b981] text-xs font-bold bg-[#10b981]/10 px-2.5 py-1 rounded-full">
                     <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-ping"></span>
@@ -814,7 +825,7 @@ function MainApp() {
                   </div>
                 </div>
                 
-                <div className="relative flex-grow bg-[#1e293b] overflow-hidden flex items-center justify-center">
+                <div className="relative flex-grow bg-[#0c1e43]/90 overflow-hidden flex items-center justify-center">
                   
                   {/* Grid Lines representing city blocks */}
                   <div className="absolute inset-0 bg-[radial-gradient(#334155_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40"></div>
@@ -842,14 +853,14 @@ function MainApp() {
                         left: obj.id === "o1" ? "32%" : obj.id === "o2" ? "58%" : "72%"
                       }}
                     >
-                      <span className="bg-slate-900 border border-[#334155] text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg text-[#f8fafc] mb-1 group-hover/marker:bg-[#f97316] group-hover/marker:border-[#f97316] transition-colors flex items-center gap-1 select-none">
-                        <MapPin className="w-2.5 h-2.5 text-[#f97316] group-hover/marker:text-white" />
+                      <span className="bg-[#09142d] border border-[#00417d]/30 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg text-[#f8fafc] mb-1 group-hover/marker:bg-[#38a6e4] group-hover/marker:border-[#38a6e4] transition-colors flex items-center gap-1 select-none">
+                        <MapPin className="w-2.5 h-2.5 text-[#38a6e4] group-hover/marker:text-white" />
                         {obj.name}
                         {obj.difficultyType === "MOUNTAIN" && (
                           <span className="bg-red-900 text-white font-extrabold text-[8px] px-1 rounded">1.35x</span>
                         )}
                       </span>
-                      <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-xl ${obj.difficultyType === "MOUNTAIN" ? "bg-red-500 animate-pulse" : "bg-[#f97316]"}`}></div>
+                      <div className={`w-3.5 h-3.5 rounded-full border-2 border-white shadow-xl ${obj.difficultyType === "MOUNTAIN" ? "bg-red-500 animate-pulse" : "bg-[#38a6e4]"}`}></div>
                     </div>
                   ))}
 
@@ -863,14 +874,14 @@ function MainApp() {
                       }}
                     >
                       <div className="relative -top-7">
-                        <span className="bg-[#f97316] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 border border-white">
+                        <span className="bg-[#38a6e4] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 border border-white">
                           <Activity className="w-2.5 h-2.5 animate-pulse text-white" />
                           Смена LIVE
                         </span>
                       </div>
                       <div className="relative">
-                        <span className="absolute -inset-3 rounded-full bg-[#f97316]/35 animate-ping"></span>
-                        <div className="w-5 h-5 rounded-full bg-[#f97316] border-2 border-white shadow-2xl flex items-center justify-center">
+                        <span className="absolute -inset-3 rounded-full bg-[#38a6e4]/35 animate-ping"></span>
+                        <div className="w-5 h-5 rounded-full bg-[#38a6e4] border-2 border-white shadow-2xl flex items-center justify-center">
                           <Truck className="w-3 h-3 text-white" />
                         </div>
                       </div>
@@ -878,9 +889,9 @@ function MainApp() {
                   )}
 
                   {/* Legend */}
-                  <div className="absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-sm border border-[#334155] rounded-xl p-2.5 shadow-xl flex gap-4 text-xs font-bold">
+                  <div className="absolute bottom-4 left-4 bg-[#09142d]/95 backdrop-blur-sm border border-[#00417d]/30 rounded-xl p-2.5 shadow-xl flex gap-4 text-xs font-bold">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#f97316]"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#38a6e4]"></div>
                       <span>Строительный объект</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -892,16 +903,16 @@ function MainApp() {
               </div>
 
               {/* Maintenance Notifications Feed */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-2xl flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-[#f97316]">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl flex flex-col h-[420px]">
+                <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-[#38a6e4]">
                     <Wrench className="w-4 h-4" />
                     <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Мониторинг Документов</h3>
                   </div>
-                  <span className="bg-[#ea580c] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">СТС / ПТС</span>
+                  <span className="bg-[#208bc9] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">СТС / ПТС</span>
                 </div>
                 
-                <div className="flex-grow p-4 flex flex-col gap-3 overflow-y-auto bg-[#0f172a]/40">
+                <div className="flex-grow p-4 flex flex-col gap-3 overflow-y-auto bg-[#00091b]/40">
                   {/* Alert 1 */}
                   <div className="p-3 border border-yellow-500/20 bg-yellow-500/5 rounded-xl flex gap-3 relative overflow-hidden">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
@@ -916,19 +927,19 @@ function MainApp() {
                   </div>
 
                   {/* Alert 2 */}
-                  <div className="p-3 border border-[#334155] bg-slate-800/40 rounded-xl flex gap-3 relative overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#f97316]"></div>
+                  <div className="p-3 border border-[#00417d]/30 bg-[#0c1e43]/40 rounded-xl flex gap-3 relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#38a6e4]"></div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
                         <h4 className="text-xs font-bold text-slate-200">Кран Liebherr (KG 777 BSB)</h4>
                         <span className="text-[10px] text-[#64748b]">ПТС</span>
                       </div>
                       <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">Документ «Разрешение Ростехнадзора» прикреплен и верифицирован.</p>
-                      <button className="mt-2 text-[#f97316] text-[10px] font-bold uppercase hover:underline" onClick={() => setSelectedVehicle(vehicles[1])}>Просмотр СТС/ПТС</button>
+                      <button className="mt-2 text-[#38a6e4] text-[10px] font-bold uppercase hover:underline" onClick={() => setSelectedVehicle(vehicles[1])}>Просмотр СТС/ПТС</button>
                     </div>
                   </div>
                   
-                  <div className="p-4 border border-dashed border-[#334155] rounded-xl flex flex-col items-center justify-center text-center text-[#64748b] h-32 mt-auto">
+                  <div className="p-4 border border-dashed border-[#00417d]/30 rounded-xl flex flex-col items-center justify-center text-center text-[#64748b] h-32 mt-auto">
                     <Info className="w-6 h-6 mb-2 text-[#64748b]" />
                     <span className="text-[11px] font-semibold">Все документы спецтехники заверены в Ростехнадзоре.</span>
                   </div>
@@ -938,18 +949,18 @@ function MainApp() {
             </div>
 
             {/* Recent Events Log Table */}
-            <div className="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 backdrop-blur-sm flex justify-between items-center">
+            <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
                 <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Оперативный Журнал (Старт/Стоп/Телеметрия)</h3>
-                <span className="text-xs text-[#f97316] font-bold flex items-center gap-1.5">
+                <span className="text-xs text-[#38a6e4] font-bold flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   Моментальная синхронизация с датчиков
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse bg-[#1e293b]">
+                <table className="w-full text-left border-collapse bg-[#0c1e43]/90">
                   <thead>
-                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">
+                    <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">
                       <th className="p-4">Сотрудник (Машинист)</th>
                       <th className="p-4">Спецтехника</th>
                       <th className="p-4">Строительный объект</th>
@@ -967,9 +978,9 @@ function MainApp() {
                       timeLogs.map((log) => {
                         const obj = objects.find(o => o.id === log.objectId);
                         return (
-                          <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                          <tr key={log.id} className="hover:bg-[#0c1e43]/40 transition-colors">
                             <td className="p-4 font-bold text-white flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-[10px] border border-[#f97316]/20">
+                              <div className="w-7 h-7 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-[10px] border border-[#38a6e4]/20">
                                 {log.driverName?.split(" ").map(w=>w[0]).join("")}
                               </div>
                               {log.driverName}
@@ -983,7 +994,7 @@ function MainApp() {
                                   Старт смены
                                 </span>
                               ) : log.eventType === "STOP" ? (
-                                <span className="inline-flex items-center gap-1 text-slate-400 font-bold bg-slate-800 px-2.5 py-0.5 rounded-md text-[10px] uppercase border border-slate-700">
+                                <span className="inline-flex items-center gap-1 text-slate-400 font-bold bg-[#0c1e43] px-2.5 py-0.5 rounded-md text-[10px] uppercase border border-slate-700">
                                   <Square className="w-2.5 h-2.5 fill-current" />
                                   Стоп смены
                                 </span>
@@ -1019,13 +1030,13 @@ function MainApp() {
           <div className="space-y-4 animate-fadeIn">
             
             {/* Filter Bar */}
-            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3 flex flex-col sm:flex-row gap-3">
+            <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-3 flex flex-col sm:flex-row gap-3">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
                 <input 
                   value={driverSearch}
                   onChange={(e) => setDriverSearch(e.target.value)}
-                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
+                  className="w-full h-10 pl-9 pr-4 bg-[#00091b] rounded-lg border border-[#00417d]/30 focus:border-[#38a6e4] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
                   placeholder="Поиск по ФИО, ВУ..." 
                   type="text"
                 />
@@ -1034,7 +1045,7 @@ function MainApp() {
                 <select 
                   value={driverFilter}
                   onChange={(e) => setDriverFilter(e.target.value)}
-                  className="h-10 px-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm font-bold outline-none min-w-[140px] cursor-pointer text-white"
+                  className="h-10 px-4 bg-[#00091b] rounded-lg border border-[#00417d]/30 focus:border-[#38a6e4] text-sm font-bold outline-none min-w-[140px] cursor-pointer text-white"
                 >
                   <option value="">Все статусы</option>
                   <option value="active">В рейсе</option>
@@ -1045,11 +1056,11 @@ function MainApp() {
             </div>
 
             {/* Drivers List */}
-            <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+            <div className="bg-[#0c1e43]/90 rounded-xl border border-[#00417d]/30 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
+                    <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
                       <th className="p-4">ФИО Водителя</th>
                       <th className="p-4">Номер тракторного ВУ</th>
                       <th className="p-4">Категории спецтехники</th>
@@ -1065,13 +1076,13 @@ function MainApp() {
                       </tr>
                     ) : (
                       filteredDrivers.map(d => (
-                        <tr key={d.id} className="hover:bg-slate-800/40 transition-colors">
+                        <tr key={d.id} className="hover:bg-[#0c1e43]/40 transition-colors">
                           <td className="p-4">
                             <button 
                               onClick={() => setSelectedDriver(d)}
-                              className="font-bold text-white hover:text-[#f97316] transition-colors flex items-center gap-2 text-left cursor-pointer"
+                              className="font-bold text-white hover:text-[#38a6e4] transition-colors flex items-center gap-2 text-left cursor-pointer"
                             >
-                              <div className="w-8 h-8 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-xs border border-[#f97316]/20">
+                              <div className="w-8 h-8 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-xs border border-[#38a6e4]/20">
                                 {d.name.split(" ").map(w=>w[0]).join("")}
                               </div>
                               {d.name}
@@ -1087,14 +1098,14 @@ function MainApp() {
                               )) || <span className="text-slate-400 text-xs">—</span>}
                             </div>
                           </td>
-                          <td className="p-4 text-[#f97316] font-extrabold">{d.activeRate || 750} ₽/ч</td>
+                          <td className="p-4 text-[#eab308] font-extrabold">{d.activeRate || 750} ₽/ч</td>
                           <td className="p-4">
                             {d.status === "ACTIVE" ? (
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/10 text-[#10b981] text-xs font-bold border border-[#10b981]/20">
                                 В рейсе
                               </span>
                             ) : d.status === "FREE" ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-xs font-bold border border-slate-700">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#0c1e43] text-slate-400 text-xs font-bold border border-slate-700">
                                 Свободен
                               </span>
                             ) : (
@@ -1111,7 +1122,7 @@ function MainApp() {
                                   setDriverForm({ name: d.name, licenseNumber: d.licenseNumber, phone: d.phone, status: d.status });
                                   setDriverModalOpen(true);
                                 }}
-                                className="p-2 text-slate-400 hover:text-[#f97316] hover:bg-slate-800 transition-colors rounded-full cursor-pointer"
+                                className="p-2 text-slate-400 hover:text-[#38a6e4] hover:bg-[#0c1e43] transition-colors rounded-full cursor-pointer"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -1144,13 +1155,13 @@ function MainApp() {
           <div className="space-y-4 animate-fadeIn">
             
             {/* Filter Bar */}
-            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3">
+            <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
                 <input 
                   value={vehicleSearch}
                   onChange={(e) => setVehicleSearch(e.target.value)}
-                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
+                  className="w-full h-10 pl-9 pr-4 bg-[#00091b] rounded-lg border border-[#00417d]/30 focus:border-[#38a6e4] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
                   placeholder="Поиск по модели, госномеру..." 
                   type="text"
                 />
@@ -1158,11 +1169,11 @@ function MainApp() {
             </div>
 
             {/* Vehicles List */}
-            <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
+            <div className="bg-[#0c1e43]/90 rounded-xl border border-[#00417d]/30 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
+                    <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
                       <th className="p-4">Спецтехника (Модель)</th>
                       <th className="p-4">Классификация техники</th>
                       <th className="p-4">Госномер</th>
@@ -1178,13 +1189,13 @@ function MainApp() {
                       </tr>
                     ) : (
                       filteredVehicles.map(v => (
-                        <tr key={v.id} className="hover:bg-slate-800/40 transition-colors">
+                        <tr key={v.id} className="hover:bg-[#0c1e43]/40 transition-colors">
                           <td className="p-4 font-bold text-white flex items-center gap-2">
                             <button 
                               onClick={() => setSelectedVehicle(v)}
-                              className="font-bold text-white hover:text-[#f97316] transition-colors flex items-center gap-2 text-left cursor-pointer"
+                              className="font-bold text-white hover:text-[#38a6e4] transition-colors flex items-center gap-2 text-left cursor-pointer"
                             >
-                              <Truck className="w-4 h-4 text-[#f97316]" />
+                              <Truck className="w-4 h-4 text-[#38a6e4]" />
                               {v.model}
                             </button>
                           </td>
@@ -1193,8 +1204,8 @@ function MainApp() {
                           <td className="p-4">
                             <div className="flex gap-2">
                               {v.documents?.map((doc, idx) => (
-                                <span key={idx} className="inline-flex items-center gap-1 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">
-                                  <FileText className="w-3 h-3 text-[#f97316]" />
+                                <span key={idx} className="inline-flex items-center gap-1 text-[10px] bg-[#0c1e43] text-slate-300 px-2 py-0.5 rounded border border-slate-700">
+                                  <FileText className="w-3 h-3 text-[#38a6e4]" />
                                   {doc.type}
                                 </span>
                               )) || <span className="text-slate-400 text-xs">—</span>}
@@ -1223,7 +1234,7 @@ function MainApp() {
                                   setVehicleForm({ model: v.model, plateNumber: v.plateNumber, vin: v.vin, status: v.status, machineryType: v.machineryType || "Гусеничный экскаватор" });
                                   setVehicleModalOpen(true);
                                 }}
-                                className="p-2 text-slate-400 hover:text-[#f97316] hover:bg-slate-800 transition-colors rounded-full cursor-pointer"
+                                className="p-2 text-slate-400 hover:text-[#38a6e4] hover:bg-[#0c1e43] transition-colors rounded-full cursor-pointer"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
@@ -1256,13 +1267,13 @@ function MainApp() {
           <div className="space-y-4 animate-fadeIn">
             
             {/* Filter Bar */}
-            <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-3">
+            <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] w-4 h-4" />
                 <input 
                   value={objectSearch}
                   onChange={(e) => setObjectSearch(e.target.value)}
-                  className="w-full h-10 pl-9 pr-4 bg-[#0f172a] rounded-lg border border-[#334155] focus:border-[#f97316] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
+                  className="w-full h-10 pl-9 pr-4 bg-[#00091b] rounded-lg border border-[#00417d]/30 focus:border-[#38a6e4] text-sm outline-none font-medium placeholder:text-[#64748b] text-white" 
                   placeholder="Поиск по названию, типу сложности..." 
                   type="text"
                 />
@@ -1275,10 +1286,10 @@ function MainApp() {
                 <div 
                   key={obj.id}
                   onClick={() => setSelectedObject(obj)}
-                  className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 hover:shadow-2xl hover:border-[#f97316]/50 transition-all cursor-pointer space-y-4 group"
+                  className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-5 hover:shadow-2xl hover:border-[#38a6e4]/50 transition-all cursor-pointer space-y-4 group"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="p-3 bg-[#f97316]/10 text-[#f97316] rounded-xl group-hover:bg-[#f97316] group-hover:text-white transition-colors">
+                    <div className="p-3 bg-[#38a6e4]/10 text-[#38a6e4] rounded-xl group-hover:bg-[#38a6e4] group-hover:text-white transition-colors">
                       <MapPin className="w-6 h-6" />
                     </div>
                     {obj.difficultyType === "MOUNTAIN" ? (
@@ -1292,10 +1303,10 @@ function MainApp() {
                     )}
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-lg text-white group-hover:text-[#f97316] transition-colors">{obj.name}</h4>
+                    <h4 className="font-extrabold text-lg text-white group-hover:text-[#38a6e4] transition-colors">{obj.name}</h4>
                     <p className="text-xs text-[#94a3b8] mt-1 font-mono">Координаты: {obj.latitude.toFixed(4)}° N, {obj.longitude.toFixed(4)}° E</p>
                   </div>
-                  <div className="border-t border-[#334155] pt-3 flex justify-between items-center text-xs">
+                  <div className="border-t border-[#00417d]/30 pt-3 flex justify-between items-center text-xs">
                     <span className="text-[#64748b] font-bold">Тариф надбавки</span>
                     <span className="text-[#f8fafc] font-extrabold">{obj.rateMultiplier}x к базовой ставке</span>
                   </div>
@@ -1344,9 +1355,9 @@ function MainApp() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 
                 {/* Total Payroll FOT */}
-                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
+                    <div className="p-2 bg-white rounded-lg border border-[#00417d]/30 text-[#38a6e4]">
                       <Wallet className="w-5 h-5" />
                     </div>
                     <span className="inline-flex items-center gap-1 text-[#10b981] font-bold text-xs bg-[#10b981]/10 px-2 py-0.5 rounded-full">
@@ -1362,9 +1373,9 @@ function MainApp() {
                 </div>
 
                 {/* Avg Driver Hourly Rate */}
-                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
+                    <div className="p-2 bg-white rounded-lg border border-[#00417d]/30 text-[#38a6e4]">
                       <Coins className="w-5 h-5" />
                     </div>
                     <span className="inline-flex items-center gap-1 text-[#94a3b8] font-bold text-xs bg-[#334155] px-2 py-0.5 rounded-full">
@@ -1380,12 +1391,12 @@ function MainApp() {
                 </div>
 
                 {/* Total Fleet Route Hours */}
-                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#f97316]">
+                    <div className="p-2 bg-white rounded-lg border border-[#00417d]/30 text-[#38a6e4]">
                       <Clock className="w-5 h-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[#f97316] font-bold text-xs bg-[#f97316]/10 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 text-[#38a6e4] font-bold text-xs bg-[#38a6e4]/10 px-2 py-0.5 rounded-full">
                       +{drivers.filter(d=>d.status === "ACTIVE").length} на линии
                     </span>
                   </div>
@@ -1398,9 +1409,9 @@ function MainApp() {
                 </div>
 
                 {/* Adjustments Fuel Saving/Loss */}
-                <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-4 flex flex-col justify-between hover:shadow-lg transition-shadow relative overflow-hidden group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-white rounded-lg border border-[#334155] text-[#ef4444]">
+                    <div className="p-2 bg-white rounded-lg border border-[#00417d]/30 text-[#ef4444]">
                       <Fuel className="w-5 h-5" />
                     </div>
                     <span className={`inline-flex items-center gap-1 font-bold text-xs px-2 py-0.5 rounded-full ${
@@ -1420,10 +1431,10 @@ function MainApp() {
               </div>
 
               {/* Active Wage Decrees Timeline (V2) */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 space-y-4">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-5 space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-extrabold text-sm tracking-wide text-white flex items-center gap-2">
-                    <FileSignature className="w-4 h-4 text-[#f97316]" />
+                    <FileSignature className="w-4 h-4 text-[#38a6e4]" />
                     Журнал Приказов об установлении ставок
                   </h3>
                   <button 
@@ -1431,21 +1442,21 @@ function MainApp() {
                       setOrderForm({ driverId: drivers[0]?.id || "", orderNumber: `П-${Math.floor(100 + Math.random() * 900)}`, dateEffective: new Date().toISOString().split('T')[0], newRate: 850 });
                       setOrderModalOpen(true);
                     }}
-                    className="h-8 px-3 bg-[#0f172a] hover:bg-slate-800 text-[#f97316] text-xs font-bold rounded-lg border border-[#334155] flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="h-8 px-3 bg-[#00091b] hover:bg-[#0c1e43] text-[#38a6e4] text-xs font-bold rounded-lg border border-[#00417d]/30 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> Инициализировать приказ
                   </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {orders.map(ord => (
-                    <div key={ord.id} className="p-4 bg-[#0f172a]/60 rounded-xl border border-[#334155] flex justify-between items-start gap-4">
+                    <div key={ord.id} className="p-4 bg-[#00091b]/60 rounded-xl border border-[#00417d]/30 flex justify-between items-start gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded font-extrabold">Приказ №{ord.orderNumber}</span>
+                          <span className="text-[10px] bg-[#0c1e43] text-slate-300 font-mono px-2 py-0.5 rounded font-extrabold">Приказ №{ord.orderNumber}</span>
                           <span className="text-[10px] text-[#64748b] font-bold">Срок: {ord.dateEffective}</span>
                         </div>
                         <h4 className="font-extrabold text-sm text-white">{ord.driverName}</h4>
-                        <p className="text-xs text-[#94a3b8]">Ставка пересматривается: <span className="line-through text-slate-500">{ord.oldRate}</span> → <span className="font-bold text-[#f97316]">{ord.newRate} ₽/ч</span></p>
+                        <p className="text-xs text-[#94a3b8]">Ставка пересматривается: <span className="line-through text-slate-500">{ord.oldRate}</span> → <span className="font-bold text-[#38a6e4]">{ord.newRate} ₽/ч</span></p>
                       </div>
                       <div>
                         {ord.status === "SIGNED" ? (
@@ -1464,17 +1475,17 @@ function MainApp() {
               </div>
 
               {/* Spreadsheet Billing Table */}
-              <div className="bg-[#1e293b] rounded-xl border border-[#334155] overflow-hidden">
-                <div className="p-4 border-b border-[#334155] bg-[#0f172a]/70 flex justify-between items-center">
+              <div className="bg-[#0c1e43]/90 rounded-xl border border-[#00417d]/30 overflow-hidden">
+                <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 flex justify-between items-center">
                   <h3 className="font-extrabold text-sm tracking-wide text-white">Ведомость расчетов и начисления Payroll</h3>
-                  <span className="text-[10px] font-extrabold bg-[#f97316]/10 text-[#f97316] px-2.5 py-1 rounded-full uppercase tracking-wide">
+                  <span className="text-[10px] font-extrabold bg-[#38a6e4]/10 text-[#38a6e4] px-2.5 py-1 rounded-full uppercase tracking-wide">
                     Учет условий местности объектов (Бишкек/Горы)
                   </span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[#334155] bg-[#0f172a]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
+                      <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
                         <th className="p-4">Сотрудник (Машинист)</th>
                         <th className="p-4">Активный объект</th>
                         <th className="p-4">Коэфф. объекта</th>
@@ -1509,9 +1520,9 @@ function MainApp() {
                         const payout = (actH * rate * multiplier) + (idlH * rate * 0.5) + adj;
 
                         return (
-                          <tr key={d.id} className="hover:bg-slate-800/40 transition-colors text-slate-200">
+                          <tr key={d.id} className="hover:bg-[#0c1e43]/40 transition-colors text-slate-200">
                             <td className="p-4 font-bold text-white flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-[10px]">
+                              <div className="w-7 h-7 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-[10px]">
                                 {d.name.split(" ").map(w=>w[0]).join("")}
                               </div>
                               {d.name}
@@ -1519,7 +1530,7 @@ function MainApp() {
                             <td className="p-4 text-slate-300">{objectName}</td>
                             <td className="p-4">
                               <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${
-                                multiplier > 1 ? "bg-red-500/20 text-red-400" : "bg-slate-800 text-slate-400"
+                                multiplier > 1 ? "bg-red-500/20 text-red-400" : "bg-[#0c1e43] text-slate-400"
                               }`}>
                                 {multiplier}x
                               </span>
@@ -1534,12 +1545,12 @@ function MainApp() {
                                 type="number" 
                                 value={adj}
                                 onChange={(e) => setManualAdjustments(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
-                                className={`w-20 h-7 border rounded px-1.5 font-bold text-center focus:border-[#f97316] outline-none bg-[#0f172a] text-white ${
+                                className={`w-20 h-7 border rounded px-1.5 font-bold text-center focus:border-[#38a6e4] outline-none bg-[#00091b] text-white ${
                                   adj >= 0 ? "border-green-800 text-green-400" : "border-red-800 text-red-400"
                                 }`}
                               />
                             </td>
-                            <td className="p-4 text-[#f97316] font-extrabold text-sm tabular-nums">
+                            <td className="p-4 text-[#eab308] font-extrabold text-sm tabular-nums">
                               {Math.round(payout).toLocaleString("ru-RU")} ₽
                             </td>
                             <td className="p-4">
@@ -1548,7 +1559,7 @@ function MainApp() {
                                   Выплачено
                                 </span>
                               ) : status === "PROCESSING" ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#f97316]/10 text-[#f97316] text-[10px] font-extrabold border border-[#f97316]/20 animate-pulse shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] text-[10px] font-extrabold border border-[#38a6e4]/20 animate-pulse shadow-sm">
                                   В обработке
                                 </span>
                               ) : (
@@ -1575,7 +1586,7 @@ function MainApp() {
                                 </button>
                               )}
                               {status === "PROCESSING" && (
-                                <span className="text-[10px] text-[#f97316] font-bold uppercase">Банк...</span>
+                                <span className="text-[10px] text-[#38a6e4] font-bold uppercase">Банк...</span>
                               )}
                             </td>
                           </tr>
@@ -1587,9 +1598,9 @@ function MainApp() {
               </div>
 
               {/* Payroll Visualization Graph Bar */}
-              <div className="bg-[#1e293b] border border-[#334155] rounded-xl p-5 space-y-4">
+              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-5 space-y-4">
                 <h4 className="font-extrabold text-sm text-white tracking-wide">Распределение фонда оплаты труда по сотрудникам</h4>
-                <div className="space-y-3.5 bg-[#0f172a]/60 p-4 rounded-xl border border-[#334155]">
+                <div className="space-y-3.5 bg-[#00091b]/60 p-4 rounded-xl border border-[#00417d]/30">
                   {drivers.map(d => {
                     const actH = getDriverActiveHours(d.id);
                     const idlH = getDriverIdleHours(d.id);
@@ -1613,9 +1624,9 @@ function MainApp() {
                           <span className="text-white">{d.name}</span>
                           <span className="text-slate-300">{Math.round(percent)}% ({Math.round(payout).toLocaleString("ru-RU")} ₽)</span>
                         </div>
-                        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-[#334155]">
+                        <div className="w-full h-3 bg-[#000511] rounded-full overflow-hidden border border-[#00417d]/30">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#f97316] to-[#ea580c] rounded-full"
+                            className="h-full bg-gradient-to-r from-[#38a6e4] to-[#208bc9] rounded-full"
                             style={{ width: `${percent}%` }}
                           ></div>
                         </div>
@@ -1632,19 +1643,19 @@ function MainApp() {
       </div>
 
       {/* Right Side Smartphone Simulator Panel (30% standard) */}
-      <div className="bg-[#1e293b] w-full lg:w-[380px] p-4 sm:p-6 shrink-0 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-[#334155] select-none h-screen overflow-y-auto">
+      <div className="bg-[#0c1e43]/90 w-full lg:w-[380px] p-4 sm:p-6 shrink-0 flex flex-col justify-start border-t lg:border-t-0 lg:border-l border-[#00417d]/30 select-none h-screen overflow-y-auto">
         <div className="mb-4">
           <h2 className="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f97316] animate-ping"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#38a6e4] animate-ping"></span>
             Мобильное приложение водителя
           </h2>
           <p className="text-xs text-[#94a3b8] font-bold mt-0.5">Электронная подпись приказов + симулятор ГСМ</p>
         </div>
 
         {/* Visual Smartphone Wrapper Container */}
-        <div className="bg-[#0f172a] p-3 rounded-[32px] shadow-2xl border-4 border-[#475569] flex flex-col h-[710px] relative overflow-hidden select-none max-w-sm mx-auto w-full">
+        <div className="bg-[#00091b] p-3 rounded-[32px] shadow-2xl border-4 border-[#475569] flex flex-col h-[710px] relative overflow-hidden select-none max-w-sm mx-auto w-full">
           {/* Speaker Notch */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-[#0f172a] rounded-full z-50 flex items-center justify-center">
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-[#00091b] rounded-full z-50 flex items-center justify-center">
             <div className="w-12 h-1 bg-[#334155] rounded-full"></div>
           </div>
 
@@ -1654,7 +1665,7 @@ function MainApp() {
             {/* Simulator Mobile App Header */}
             <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-4 shrink-0">
               <span className="font-extrabold text-base text-slate-800 tracking-tight flex items-center gap-1">
-                <Truck className="w-4 h-4 text-[#f97316]" />
+                <Truck className="w-4 h-4 text-[#38a6e4]" />
                 АВАНГАРД
               </span>
               <span className="text-[10px] font-extrabold bg-[#f1f5f9] text-slate-600 px-2 py-0.5 rounded tracking-wide uppercase">Спецтехника</span>
@@ -1762,7 +1773,7 @@ function MainApp() {
                   {!simActive ? (
                     <button 
                       onClick={handleSimStartShift}
-                      className="flex-1 h-10 bg-[#f97316] hover:bg-[#ea580c] text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      className="flex-1 h-10 bg-[#38a6e4] hover:bg-[#208bc9] text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       Начать смену
@@ -1770,7 +1781,7 @@ function MainApp() {
                   ) : (
                     <button 
                       onClick={handleSimStopShift}
-                      className="flex-1 h-10 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                      className="flex-1 h-10 bg-[#0c1e43] hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                     >
                       <Square className="w-3.5 h-3.5 fill-current" />
                       Завершить
@@ -1784,7 +1795,7 @@ function MainApp() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Телеметрия GPS & Бак</span>
                 
                 <div className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm text-xs font-semibold">
-                  <div className="p-2 bg-[#f97316]/10 text-[#f97316] rounded-md shrink-0">
+                  <div className="p-2 bg-[#38a6e4]/10 text-[#38a6e4] rounded-md shrink-0">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col">
@@ -1792,8 +1803,8 @@ function MainApp() {
                     <span className="text-xs text-slate-900 font-bold mt-0.5">
                       {simActive ? GEOLOCATION_PATH[simPathIndex].lat.toFixed(4) : "42.8744"}° N, {simActive ? GEOLOCATION_PATH[simPathIndex].lng.toFixed(4) : "74.5698"}° E
                     </span>
-                    <span className="text-[9px] text-[#f97316] font-bold mt-1 flex items-center gap-1">
-                      <Navigation className="w-3 h-3 text-[#f97316]" />
+                    <span className="text-[9px] text-[#38a6e4] font-bold mt-1 flex items-center gap-1">
+                      <Navigation className="w-3 h-3 text-[#38a6e4]" />
                       {simActive ? GEOLOCATION_PATH[simPathIndex].label : "Депо Западное (Бишкек)"}
                     </span>
                   </div>
@@ -1801,12 +1812,12 @@ function MainApp() {
 
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm space-y-2 text-xs font-semibold">
                   <div className="flex justify-between items-center text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
-                    <span className="flex items-center gap-1"><Fuel className="w-3.5 h-3.5 text-[#f97316]" /> Топливный датчик</span>
-                    <span className={simFuel < 20 ? "text-red-600 animate-pulse" : "text-[#f97316]"}>{simFuel.toFixed(1)}%</span>
+                    <span className="flex items-center gap-1"><Fuel className="w-3.5 h-3.5 text-[#38a6e4]" /> Топливный датчик</span>
+                    <span className={simFuel < 20 ? "text-red-600 animate-pulse" : "text-[#38a6e4]"}>{simFuel.toFixed(1)}%</span>
                   </div>
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div 
-                      className={`h-full transition-all duration-1000 ${simFuel < 20 ? "bg-red-600" : "bg-[#f97316]"}`} 
+                      className={`h-full transition-all duration-1000 ${simFuel < 20 ? "bg-red-600" : "bg-[#38a6e4]"}`} 
                       style={{ width: `${Math.max(0, simFuel)}%` }}
                     ></div>
                   </div>
@@ -1827,7 +1838,7 @@ function MainApp() {
                 <div className="flex gap-2 text-xs font-bold pt-1">
                   <div className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-center shadow-sm">
                     <span className="block text-[8px] text-slate-400 uppercase tracking-wide font-extrabold mb-0.5">В пути</span>
-                    <span className="text-[#f97316] font-bold tabular-nums">{simActive ? simDistance.toFixed(1) : "0.0"} км</span>
+                    <span className="text-[#38a6e4] font-bold tabular-nums">{simActive ? simDistance.toFixed(1) : "0.0"} км</span>
                   </div>
                   <div className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-center shadow-sm">
                     <span className="block text-[8px] text-slate-400 uppercase tracking-wide font-extrabold mb-0.5">Текущая ставка</span>
@@ -1853,7 +1864,7 @@ function MainApp() {
                       <div key={idx} className="flex justify-between items-center p-2.5">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Завершено" ? "bg-[#10b981]" : "bg-[#f97316] animate-pulse"}`}></span>
+                            <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Завершено" ? "bg-[#10b981]" : "bg-[#38a6e4] animate-pulse"}`}></span>
                             <span className="font-extrabold text-slate-800">{item.date}</span>
                           </div>
                           <span className="text-[9px] text-slate-400 mt-0.5 block">{item.timeRange}</span>
@@ -1877,8 +1888,8 @@ function MainApp() {
 
       {/* Driver Modal */}
       {driverModalOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">
               {editingDriver ? "Редактировать сотрудника" : "Нанять машиниста в штат"}
             </h3>
@@ -1891,7 +1902,7 @@ function MainApp() {
                   value={driverForm.name}
                   onChange={(e) => setDriverForm({ ...driverForm, name: e.target.value })}
                   placeholder="Алексей Петров"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
@@ -1902,7 +1913,7 @@ function MainApp() {
                   value={driverForm.licenseNumber}
                   onChange={(e) => setDriverForm({ ...driverForm, licenseNumber: e.target.value })}
                   placeholder="KG 88 AA 9999"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
                 />
               </div>
               <div>
@@ -1913,7 +1924,7 @@ function MainApp() {
                   value={driverForm.phone}
                   onChange={(e) => setDriverForm({ ...driverForm, phone: e.target.value })}
                   placeholder="+996 (555) 12-34-56"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
@@ -1921,7 +1932,7 @@ function MainApp() {
                 <select
                   value={driverForm.status}
                   onChange={(e) => setDriverForm({ ...driverForm, status: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="FREE">Свободен</option>
                   <option value="ACTIVE">На смене</option>
@@ -1932,13 +1943,13 @@ function MainApp() {
                 <button
                   type="button"
                   onClick={() => setDriverModalOpen(false)}
-                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Сохранить
                 </button>
@@ -1950,8 +1961,8 @@ function MainApp() {
 
       {/* Vehicle Modal */}
       {vehicleModalOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">
               {editingVehicle ? "Редактировать спецтехнику" : "Поставить спецтехнику на баланс"}
             </h3>
@@ -1964,7 +1975,7 @@ function MainApp() {
                   value={vehicleForm.model}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
                   placeholder="Экскаватор CAT 320"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div>
@@ -1972,7 +1983,7 @@ function MainApp() {
                 <select
                   value={vehicleForm.machineryType}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, machineryType: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="Гусеничный экскаватор">Гусеничный экскаватор</option>
                   <option value="Тяжелый кран">Тяжелый кран</option>
@@ -1988,7 +1999,7 @@ function MainApp() {
                   value={vehicleForm.plateNumber}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, plateNumber: e.target.value })}
                   placeholder="KG 555 ABD"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono uppercase"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
                 />
               </div>
               <div>
@@ -1999,7 +2010,7 @@ function MainApp() {
                   value={vehicleForm.vin}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, vin: e.target.value })}
                   placeholder="CAT320E999XYZ0001"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono uppercase"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono uppercase"
                 />
               </div>
               <div>
@@ -2007,7 +2018,7 @@ function MainApp() {
                 <select
                   value={vehicleForm.status}
                   onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="ACTIVE">Активен</option>
                   <option value="MAINTENANCE">В ремонте</option>
@@ -2018,13 +2029,13 @@ function MainApp() {
                 <button
                   type="button"
                   onClick={() => setVehicleModalOpen(false)}
-                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Сохранить
                 </button>
@@ -2036,8 +2047,8 @@ function MainApp() {
 
       {/* Object Modal */}
       {objectModalOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">Создать строительный объект</h3>
             <form onSubmit={handleObjectSubmit} className="space-y-4 text-xs font-bold">
               <div>
@@ -2048,7 +2059,7 @@ function MainApp() {
                   value={objectForm.name}
                   onChange={(e) => setObjectForm({ ...objectForm, name: e.target.value })}
                   placeholder="ЖК Ала-Тоо (Бишкек)"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -2060,7 +2071,7 @@ function MainApp() {
                     step="0.0001"
                     value={objectForm.latitude}
                     onChange={(e) => setObjectForm({ ...objectForm, latitude: Number(e.target.value) })}
-                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                   />
                 </div>
                 <div>
@@ -2071,7 +2082,7 @@ function MainApp() {
                     step="0.0001"
                     value={objectForm.longitude}
                     onChange={(e) => setObjectForm({ ...objectForm, longitude: Number(e.target.value) })}
-                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                   />
                 </div>
               </div>
@@ -2080,7 +2091,7 @@ function MainApp() {
                 <select
                   value={objectForm.difficultyType}
                   onChange={(e) => setObjectForm({ ...objectForm, difficultyType: e.target.value as "PLAIN" | "MOUNTAIN" })}
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="PLAIN">Равнинный (1.0x)</option>
                   <option value="MOUNTAIN">Горный сектор (1.35x надбавка)</option>
@@ -2090,13 +2101,13 @@ function MainApp() {
                 <button
                   type="button"
                   onClick={() => setObjectModalOpen(false)}
-                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Сохранить
                 </button>
@@ -2108,8 +2119,8 @@ function MainApp() {
 
       {/* Order (Wage Decree) Modal */}
       {orderModalOpen && (
-        <div className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-[#1e293b] rounded-2xl border border-[#334155] p-6 max-w-md w-full shadow-2xl">
+        <div className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#0c1e43]/90 rounded-2xl border border-[#00417d]/30 p-6 max-w-md w-full shadow-2xl">
             <h3 className="text-lg font-bold text-white mb-4">Выдать приказ о ставке</h3>
             <form onSubmit={handleOrderSubmit} className="space-y-4 text-xs font-bold">
               <div>
@@ -2117,7 +2128,7 @@ function MainApp() {
                 <select
                   value={orderForm.driverId}
                   onChange={(e) => setOrderForm({ ...orderForm, driverId: e.target.value })}
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold cursor-pointer text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold cursor-pointer text-white"
                 >
                   <option value="">Выберите водителя...</option>
                   {drivers.map(d => (
@@ -2133,7 +2144,7 @@ function MainApp() {
                     type="text"
                     value={orderForm.orderNumber}
                     onChange={(e) => setOrderForm({ ...orderForm, orderNumber: e.target.value })}
-                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white font-mono"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white font-mono"
                   />
                 </div>
                 <div>
@@ -2143,7 +2154,7 @@ function MainApp() {
                     type="date"
                     value={orderForm.dateEffective}
                     onChange={(e) => setOrderForm({ ...orderForm, dateEffective: e.target.value })}
-                    className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                    className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                   />
                 </div>
               </div>
@@ -2155,20 +2166,20 @@ function MainApp() {
                   value={orderForm.newRate}
                   onChange={(e) => setOrderForm({ ...orderForm, newRate: Number(e.target.value) })}
                   placeholder="850"
-                  className="w-full h-10 px-3 bg-[#0f172a] border border-[#334155] rounded-lg focus:border-[#f97316] outline-none text-sm font-semibold text-white"
+                  className="w-full h-10 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-lg focus:border-[#38a6e4] outline-none text-sm font-semibold text-white"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setOrderModalOpen(false)}
-                  className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#0c1e43] hover:bg-slate-700 text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="h-10 px-4 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
+                  className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white rounded-lg transition-colors font-bold text-sm cursor-pointer"
                 >
                   Оформить приказ
                 </button>
@@ -2224,19 +2235,19 @@ function MainApp() {
 
         return (
           <>
-            <div onClick={() => setSelectedVehicle(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
-              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
+            <div onClick={() => setSelectedVehicle(null)} className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#0c1e43]/90 border-l border-[#00417d]/30 shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-[#f97316]/10 rounded-xl text-[#f97316]">
+                  <div className="p-2.5 bg-[#38a6e4]/10 rounded-xl text-[#38a6e4]">
                     <Truck className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-white">{selectedVehicle.model}</h3>
-                    <span className="text-xs font-mono bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded font-bold border border-slate-800">{selectedVehicle.plateNumber}</span>
+                    <span className="text-xs font-mono bg-[#09142d] text-slate-300 px-1.5 py-0.5 rounded font-bold border border-[#00417d]/30">{selectedVehicle.plateNumber}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedVehicle(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
+                <button onClick={() => setSelectedVehicle(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-[#0c1e43] cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -2248,15 +2259,15 @@ function MainApp() {
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Документы Спецтехники (СТС/ПТС)</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedVehicle.documents?.map((doc, idx) => (
-                      <div key={idx} className="p-3 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between hover:border-[#f97316]/40 transition-colors">
+                      <div key={idx} className="p-3 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between hover:border-[#38a6e4]/40 transition-colors">
                         <div className="flex items-center gap-2.5">
-                          <FileText className="w-5 h-5 text-[#f97316]" />
+                          <FileText className="w-5 h-5 text-[#38a6e4]" />
                           <div>
                             <span className="block text-xs font-bold text-white">{doc.name}</span>
                             <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
                           </div>
                         </div>
-                        <button className="text-[10px] text-[#f97316] font-bold uppercase hover:underline">Скачать PDF</button>
+                        <button className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline">Скачать PDF</button>
                       </div>
                     ))}
                   </div>
@@ -2265,9 +2276,9 @@ function MainApp() {
                 {/* Active driver */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Машинист на смене</h4>
-                  <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between">
+                  <div className="p-4 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-xs border border-[#f97316]/20">
+                      <div className="w-10 h-10 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-xs border border-[#38a6e4]/20">
                         {driverPhoto}
                       </div>
                       <div>
@@ -2278,13 +2289,13 @@ function MainApp() {
                 </div>
 
                 {/* Fuel gauge */}
-                <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl space-y-3">
+                <div className="p-4 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl space-y-3">
                   <div className="flex justify-between items-center text-xs font-bold text-[#94a3b8] uppercase">
-                    <span className="flex items-center gap-1"><Fuel className="w-4 h-4 text-[#f97316]" /> Датчик уровня бака</span>
-                    <span className={fuelRemaining < 20 ? "text-red-500 font-extrabold" : "text-[#f97316]"}>{fuelRemaining.toFixed(1)}%</span>
+                    <span className="flex items-center gap-1"><Fuel className="w-4 h-4 text-[#38a6e4]" /> Датчик уровня бака</span>
+                    <span className={fuelRemaining < 20 ? "text-red-500 font-extrabold" : "text-[#38a6e4]"}>{fuelRemaining.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden">
-                    <div className={`h-full ${fuelRemaining < 20 ? "bg-red-500" : "bg-[#f97316]"}`} style={{ width: `${fuelRemaining}%` }}></div>
+                  <div className="w-full h-2.5 bg-[#09142d] rounded-full overflow-hidden">
+                    <div className={`h-full ${fuelRemaining < 20 ? "bg-red-500" : "bg-[#38a6e4]"}`} style={{ width: `${fuelRemaining}%` }}></div>
                   </div>
                   <div className="text-[11px] text-[#64748b] font-bold">Остаток бака: ~{fuelLitres} Л</div>
                 </div>
@@ -2293,19 +2304,19 @@ function MainApp() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Метрики смены</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                    <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Длительность</span>
                       <span className="text-sm font-extrabold text-white block tabular-nums">{shiftTime}</span>
                     </div>
-                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                    <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Дистанция</span>
                       <span className="text-sm font-extrabold text-white block tabular-nums">{distance.toFixed(1)} км</span>
                     </div>
-                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                    <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Расход</span>
                       <span className="text-sm font-extrabold text-white block tabular-nums">{consumptionRate} л/100км</span>
                     </div>
-                    <div className="p-3 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-1">
+                    <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Скорость</span>
                       <span className="text-sm font-extrabold text-white block tabular-nums">{speed} км/ч</span>
                     </div>
@@ -2315,7 +2326,7 @@ function MainApp() {
                 {/* Events Log */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Лог событий ТС</h4>
-                  <div className="border border-[#334155] rounded-xl divide-y divide-[#334155] overflow-hidden bg-[#0f172a]/40">
+                  <div className="border border-[#00417d]/30 rounded-xl divide-y divide-[#334155] overflow-hidden bg-[#00091b]/40">
                     {events.map((ev, i) => (
                       <div key={i} className="p-3 text-xs font-semibold flex justify-between items-start gap-4 text-slate-300">
                         <span>{ev.text}</span>
@@ -2327,8 +2338,8 @@ function MainApp() {
 
               </div>
 
-              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
-                <button onClick={() => setSelectedVehicle(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+              <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
+                <button onClick={() => setSelectedVehicle(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
                   Закрыть
                 </button>
               </div>
@@ -2341,11 +2352,11 @@ function MainApp() {
       {selectedDriver && (() => {
         return (
           <>
-            <div onClick={() => setSelectedDriver(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
-              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
+            <div onClick={() => setSelectedDriver(null)} className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#0c1e43]/90 border-l border-[#00417d]/30 shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#f97316]/10 text-[#f97316] flex items-center justify-center font-extrabold text-sm border border-[#f97316]/20">
+                  <div className="w-12 h-12 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-sm border border-[#38a6e4]/20">
                     {selectedDriver.name.split(" ").map(w=>w[0]).join("")}
                   </div>
                   <div>
@@ -2353,7 +2364,7 @@ function MainApp() {
                     <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">ВУ тракториста: {selectedDriver.licenseNumber}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedDriver(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
+                <button onClick={() => setSelectedDriver(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-[#0c1e43] cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -2363,9 +2374,9 @@ function MainApp() {
                 {/* Permits & Categories list */}
                 <div className="space-y-2.5">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Допуски к спецтехнике</h4>
-                  <div className="flex flex-wrap gap-1.5 p-3.5 bg-[#0f172a]/40 border border-[#334155] rounded-xl">
+                  <div className="flex flex-wrap gap-1.5 p-3.5 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl">
                     {selectedDriver.permitCategories?.map((cat, idx) => (
-                      <span key={idx} className="text-xs bg-[#f97316]/15 text-[#f97316] border border-[#f97316]/20 px-3 py-1 rounded-full font-bold">
+                      <span key={idx} className="text-xs bg-[#38a6e4]/15 text-[#38a6e4] border border-[#38a6e4]/20 px-3 py-1 rounded-full font-bold">
                         {cat}
                       </span>
                     )) || <span className="text-slate-400 text-xs">—</span>}
@@ -2377,15 +2388,15 @@ function MainApp() {
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Личные Документы машиниста</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedDriver.documents?.map((doc, idx) => (
-                      <div key={idx} className="p-3 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between hover:border-[#f97316]/40 transition-colors">
+                      <div key={idx} className="p-3 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between hover:border-[#38a6e4]/40 transition-colors">
                         <div className="flex items-center gap-2.5">
-                          <FileText className="w-5 h-5 text-[#f97316]" />
+                          <FileText className="w-5 h-5 text-[#38a6e4]" />
                           <div>
                             <span className="block text-xs font-bold text-white">{doc.name}</span>
                             <span className="text-[10px] text-[#64748b] block font-mono">{doc.file}</span>
                           </div>
                         </div>
-                        <button className="text-[10px] text-[#f97316] font-bold uppercase hover:underline">Просмотр</button>
+                        <button className="text-[10px] text-[#38a6e4] font-bold uppercase hover:underline">Просмотр</button>
                       </div>
                     ))}
                   </div>
@@ -2394,14 +2405,14 @@ function MainApp() {
                 {/* Rate History Decrees Timeline (V2) */}
                 <div className="space-y-2.5">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">История часовых ставок (Приказы)</h4>
-                  <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl space-y-3.5 relative">
+                  <div className="p-4 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl space-y-3.5 relative">
                     {selectedDriver.rateHistory?.map((hist, idx) => (
                       <div key={idx} className="flex justify-between items-start gap-4 text-xs">
                         <div className="space-y-1">
                           <span className="block font-bold text-white text-xs">{hist.reason}</span>
                           <span className="text-[10px] text-[#64748b] block font-mono">{hist.date}</span>
                         </div>
-                        <span className="text-[#f97316] font-extrabold text-sm whitespace-nowrap">{hist.rate} ₽/ч</span>
+                        <span className="text-[#eab308] font-extrabold text-sm whitespace-nowrap">{hist.rate} ₽/ч</span>
                       </div>
                     )) || <span className="text-slate-400 text-xs">—</span>}
                   </div>
@@ -2409,8 +2420,8 @@ function MainApp() {
 
               </div>
 
-              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
-                <button onClick={() => setSelectedDriver(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+              <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
+                <button onClick={() => setSelectedDriver(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
                   Закрыть
                 </button>
               </div>
@@ -2423,11 +2434,11 @@ function MainApp() {
       {selectedObject && (() => {
         return (
           <>
-            <div onClick={() => setSelectedObject(null)} className="fixed inset-0 bg-[#0f172a]/70 backdrop-blur-sm z-[110]"></div>
-            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#1e293b] border-l border-[#334155] shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
-              <div className="p-5 border-b border-[#334155] flex justify-between items-center bg-[#0f172a]/50">
+            <div onClick={() => setSelectedObject(null)} className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#0c1e43]/90 border-l border-[#00417d]/30 shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-[#f97316]/10 rounded-xl text-[#f97316]">
+                  <div className="p-2.5 bg-[#38a6e4]/10 rounded-xl text-[#38a6e4]">
                     <MapPin className="w-6 h-6" />
                   </div>
                   <div>
@@ -2435,7 +2446,7 @@ function MainApp() {
                     <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">Координаты: {selectedObject.latitude.toFixed(4)}° N, {selectedObject.longitude.toFixed(4)}° E</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedObject(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 cursor-pointer">
+                <button onClick={() => setSelectedObject(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-[#0c1e43] cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -2443,7 +2454,7 @@ function MainApp() {
               <div className="flex-grow overflow-y-auto p-5 space-y-6">
                 
                 {/* Terrain difficulty info */}
-                <div className="p-4 bg-[#0f172a]/60 border border-[#334155] rounded-xl flex items-center justify-between">
+                <div className="p-4 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300 uppercase">Условия местности</span>
                   {selectedObject.difficultyType === "MOUNTAIN" ? (
                     <span className="bg-red-500/20 text-red-400 font-extrabold text-xs px-3 py-1 rounded-full border border-red-500/30 uppercase">
@@ -2459,7 +2470,7 @@ function MainApp() {
                 {/* Assigned machinery and employees */}
                 <div className="space-y-2.5">
                   <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Активная спецтехника на объекте</h4>
-                  <div className="p-4 bg-[#0f172a]/40 border border-[#334155] rounded-xl space-y-3">
+                  <div className="p-4 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-3">
                     {selectedObject.id === "o2" ? (
                       <div className="flex justify-between items-center text-xs">
                         <span className="font-bold text-white">Кран Liebherr LTM 1050</span>
@@ -2478,8 +2489,8 @@ function MainApp() {
 
               </div>
 
-              <div className="p-4 border-t border-[#334155] bg-[#0f172a]/30 flex gap-2">
-                <button onClick={() => setSelectedObject(null)} className="flex-1 h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+              <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
+                <button onClick={() => setSelectedObject(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
                   Закрыть
                 </button>
               </div>
