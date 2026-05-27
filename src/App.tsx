@@ -120,6 +120,8 @@ function MainApp() {
   const [lang, setLang] = useState<"RU" | "KG">("RU");
   const [calendarDriver, setCalendarDriver] = useState<Driver | null>(null);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<number | null>(null);
+  const [calendarVehicle, setCalendarVehicle] = useState<Vehicle | null>(null);
+  const [selectedVehicleCalendarDate, setSelectedVehicleCalendarDate] = useState<number | null>(null);
   
   const translations = {
     RU: {
@@ -1491,6 +1493,16 @@ function MainApp() {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setCalendarVehicle(v);
+                                  setSelectedVehicleCalendarDate(null);
+                                }}
+                                className="p-2 text-slate-400 hover:text-green-400 hover:bg-[#0c1e43] transition-colors rounded-lg"
+                                title={lang === "RU" ? "Календарь работы техники" : "Техниканын жумуш календары"}
+                              >
+                                <Calendar className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => {
                                   setEditingVehicle(v);
@@ -2936,25 +2948,60 @@ function MainApp() {
                   </div>
                 </div>
 
-                {/* Dynamic Operational History of Machinery */}
+                {/* Rich Vehicle Lifecycle History Timeline */}
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "История и жизненный цикл техники" : "Техниканын тарыхы жана өмүр бою цикли"}</h4>
-                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-4">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "История жизненного цикла техники" : "Техниканын жашоо цикли тарыхы"}</h4>
+                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-3.5">
                     {(() => {
-                      const historyEvents = [
-                        { date: "2026-05-26", title: lang === "RU" ? "Плановый ремонт гидравлики" : "Гидравликанын пландуу оңдоосу", desc: lang === "RU" ? "Успешно проведен плановый осмотр и ремонт гидравлической системы и шлангов высокого давления." : "Гидравликалык системаны жана жогорку басымдагы шлангдарды текшерүү жана оңдоо аяктады.", status: "COMPLETED" },
-                        { date: "2026-05-25", title: lang === "RU" ? "Регистрация Госгортехнадзора КР" : "КР Мамтоосуу көзөмөлүнүн каттоосу", desc: lang === "RU" ? "Техника прошла полную экспертизу промышленной безопасности и аттестована инспектором Госгортехнадзора КР." : "Техника өнөр жай коопсуздугунун экспертизасынан өтүп, КР Мамтоосуу көзөмөлүнүн инспектору тарабынан тастыкталды.", status: "SUCCESS" },
-                        { date: "2026-05-12", title: lang === "RU" ? "Техническое обслуживание (ТО-2)" : "Техникалык тейлөө (ТО-2)", desc: lang === "RU" ? "Замена моторного масла Shell Rimula, масляного, топливного и воздушного фильтров." : "Shell Rimula мотор майын, май, күйүүчү май жана аба чыпкаларын алмаштыруу.", status: "SERVICE" },
-                        { date: "2026-04-15", title: lang === "RU" ? "Закрепление сотрудника" : "Кызматкерди бекитүү", desc: lang === "RU" ? "За единицей техники официально закреплен постоянный оператор-машинист Азамат Исмаилов." : "Техника бирдигине расмий түрдө туруктуу оператор-машинист Азамат Исмаилов бекитилди.", status: "COUPLING" },
-                        { date: "2026-03-10", title: lang === "RU" ? "Постановка на баланс автопарка" : "Баланска кабыл алуу", desc: lang === "RU" ? "Спецтехника принята в эксплуатацию и поставлена на баланс ОсОО «Авангард Стиль»." : "Атайын техника эксплуатацияга кабыл алынып, «Авангард Стиль» ЖЧКнын балансына коюлду.", status: "ADMISSION" }
+                      const vehicleLifecycle: any = {
+                        v1: [
+                          { date:"2026-05-26", type:"repair",   title: lang==="RU"?"Плановый ремонт гидравлики":"Гидравликанын пландуу оңдоосу",   desc: lang==="RU"?"ТО и замена гидравлических шлангов. Простой 2 дня.":"Гидравликалык шлангдарды алмаштыруу. Токтоп туруу 2 күн." },
+                          { date:"2026-05-12", type:"service",  title: lang==="RU"?"Техническое обслуживание ТО-2":"Техникалык тейлөө ТО-2",         desc: lang==="RU"?"Плановое ТО-2: масло, фильтры, ходовая. ОАО СервисТех.":"Пландуу ТО-2: май, фильтрлер, жүрүүчү бөлүк. ОАО СервисТех." },
+                          { date:"2026-05-10", type:"reg",      title: lang==="RU"?"Регистрация Госгортехнадзор КР":"КР Мамтоосуу көзөмөлүнүн каттоосу", desc: lang==="RU"?"Пройдена техническая инспекция. Свидетельство №КГ-2026-4471.":"Техникалык инспекция өткөрүлдү. Күбөлүк №КГ-2026-4471." },
+                          { date:"2026-04-15", type:"assign",   title: lang==="RU"?"Закреплён за оператором":"Оператоорго бекитилди",                desc: lang==="RU"?"Официально закреплён за Азаматом Исмаиловым. Приказ №41-ОД.":"Азамат Исмаиловго расмий бекитилди. Буйрук №41-ОД." },
+                          { date:"2026-03-10", type:"balance",  title: lang==="RU"?"Постановка на баланс":"Баланска кабыл алуу",                    desc: lang==="RU"?"Принят на баланс автопарка. Инвентарный №АП-001.":"Автопарктын балансына кабыл алынды. Инвентар №АП-001." },
+                          { date:"2026-02-20", type:"reg",      title: lang==="RU"?"Регистрация в ГАИ КР":"КР ГАИда каттоо",                        desc: lang==="RU"?"Получены гос. номера. ВИН KG-EXC-320-2021-001.":"Мамл. номерлер алынды. ВИН KG-EXC-320-2021-001." },
+                          { date:"2026-02-01", type:"purchase", title: lang==="RU"?"Закупка и поставка":"Сатып алуу жана жеткирүү",                  desc: lang==="RU"?"Приобретён у официального дилера CAT (Бишкек). Сумма: 5 800 000 сом.":"CAT расмий дилеринен сатып алынды (Бишкек). Суммасы: 5 800 000 сом." },
+                        ],
+                        v2: [
+                          { date:"2026-05-15", type:"service",  title: lang==="RU"?"ТО-1 плановое":"Пландуу ТО-1",                                  desc: lang==="RU"?"Плановое ТО-1: масло, фильтры, тормоза. Пробег 1240ч.":"Пландуу ТО-1: май, фильтрлер. Иштелген убакыт 1240 саат." },
+                          { date:"2026-05-10", type:"reg",      title: lang==="RU"?"Технический осмотр":"Техникалык байкоо",                         desc: lang==="RU"?"Прошёл гос. техосмотр. Следующий: ноябрь 2026.":"Мамл. техосмотрдон өттү. Кийинки: ноябрь 2026." },
+                          { date:"2026-04-20", type:"assign",   title: lang==="RU"?"Смена оператора":"Оператору алмаштыруу",                        desc: lang==="RU"?"Закреплён за Сергеем Смирновым. Прежний оператор в отпуске.":"Сергей Смирновго бекитилди. Мурунку оператор өргүүдө." },
+                          { date:"2026-03-01", type:"balance",  title: lang==="RU"?"Постановка на баланс":"Баланска кабыл алуу",                    desc: lang==="RU"?"Принят на баланс. Инв. №АП-002. Первичный техосмотр выполнен.":"Баланска кабыл алынды. Инв. №АП-002." },
+                          { date:"2026-01-15", type:"purchase", title: lang==="RU"?"Закупка — Volvo EC220D":"Volvo EC220D сатып алуу",               desc: lang==="RU"?"Куплен у Volvo CE Almaty. Сумма: 4 200 000 сом.":"Volvo CE Almatyдан сатып алынды. Сумма: 4 200 000 сом." },
+                        ],
+                        v3: [
+                          { date:"2026-05-22", type:"repair",   title: lang==="RU"?"Внеплановый ремонт":"Пландан тышкары оңдоо",                    desc: lang==="RU"?"Замена гусениц. Износ 80%. Простой 3 дня.":"Гусеницаларды алмаштыруу. Тозуу 80%. Токтоп туруу 3 күн." },
+                          { date:"2026-04-30", type:"service",  title: lang==="RU"?"ТО-2":"ТО-2",                                                   desc: lang==="RU"?"Плановое ТО-2 на базе СТО «МехСервис». Пробег 2100ч.":"«МехСервис» СТОда пландуу ТО-2. 2100 саат." },
+                          { date:"2026-04-01", type:"reg",      title: lang==="RU"?"Переоформление страховки":"Камсыздандырууну кайра жол-жоболоо",  desc: lang==="RU"?"Полис КГ-ОСА-2026-0058 продлён до 01.04.2027.":"Полис КГ-ОСА-2026-0058 01.04.2027га чейин узартылды." },
+                          { date:"2026-03-05", type:"assign",   title: lang==="RU"?"Оператор Улан Токтосунов":"Улан Токтосунов — оператор",          desc: lang==="RU"?"Приказ №25-ОД. Закреплён за Уланом Токтосуновым.":"Буйрук №25-ОД. Улан Токтосуновго бекитилди." },
+                          { date:"2026-01-20", type:"balance",  title: lang==="RU"?"Принят на баланс":"Баланска кабыл алуу",                        desc: lang==="RU"?"Инв. №АП-003. Куплен в Казахстане (тендер).":"Инв. №АП-003. Казакстандан сатып алынды (тендер)." },
+                        ],
+                        v4: [
+                          { date:"2026-05-10", type:"service",  title: lang==="RU"?"ТО-1":"ТО-1",                                                   desc: lang==="RU"?"Плановое ТО-1. Замена масла и фильтров.":"Пландуу ТО-1. Май жана фильтрлерди алмаштыруу." },
+                          { date:"2026-04-01", type:"assign",   title: lang==="RU"?"Назначен оператор":"Оператор дайындалды",                       desc: lang==="RU"?"Бекзод Рахимов закреплён по приказу №33-ОД.":"Бекзод Рахимов №33-ОД буйругу менен бекитилди." },
+                          { date:"2026-03-15", type:"balance",  title: lang==="RU"?"Постановка на баланс":"Баланска кабыл алуу",                    desc: lang==="RU"?"Инв. №АП-004. Куплен на аукционе б/у техники.":"Инв. №АП-004. Колдонулган техника аукционунан сатып алынды." },
+                          { date:"2026-03-01", type:"purchase", title: lang==="RU"?"Закупка Liebherr A924":"Liebherr A924 сатып алуу",               desc: lang==="RU"?"Куплен у дилера Liebherr Бишкек. Сумма: 3 100 000 сом.":"Liebherr Бишкек дилеринен сатып алынды. 3 100 000 сом." },
+                        ],
+                      };
+                      const events = vehicleLifecycle[selectedVehicle?.id || ""] || [
+                        { date:"2026-05-15", type:"service",  title: lang==="RU"?"Техническое обслуживание":"Техникалык тейлөө",          desc: lang==="RU"?"Плановое ТО выполнено в срок.":"Пландуу ТО мезгилинде аткарылды." },
+                        { date:"2026-04-01", type:"assign",   title: lang==="RU"?"Назначен оператор":"Оператор дайындалды",               desc: lang==="RU"?"Оператор официально закреплён.":"Оператор расмий бекитилди." },
+                        { date:"2026-03-01", type:"balance",  title: lang==="RU"?"Постановка на баланс":"Баланска кабыл алуу",            desc: lang==="RU"?"Принята на баланс автопарка.":"Автопарктын балансына кабыл алынды." },
+                        { date:"2026-02-01", type:"purchase", title: lang==="RU"?"Закупка техники":"Техника сатып алуу",                  desc: lang==="RU"?"Приобретена у официального дилера.":"Расмий дилерден сатып алынды." },
                       ];
-
-                      return historyEvents.map((evt, idx) => (
-                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/30 space-y-1">
-                          <div className="absolute left-[-4.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#38a6e4] ring-4 ring-[#0c1e43]"></div>
-                          <div className="flex justify-between items-start text-xs">
-                            <span className="font-extrabold text-white">{evt.title}</span>
-                            <span className="text-[10px] text-[#64748b] font-bold font-mono">{evt.date}</span>
+                      const dotColor: any = { purchase:"bg-green-500",balance:"bg-[#38a6e4]",reg:"bg-purple-400",service:"bg-[#eab308]",repair:"bg-orange-400",assign:"bg-sky-400",insurance:"bg-indigo-400",downtime:"bg-red-400" };
+                      const tagColor: any = { purchase:"bg-green-500/10 text-green-400",balance:"bg-sky-500/10 text-sky-400",reg:"bg-purple-500/10 text-purple-400",service:"bg-yellow-500/10 text-yellow-400",repair:"bg-orange-500/10 text-orange-400",assign:"bg-sky-500/10 text-sky-400",insurance:"bg-indigo-500/10 text-indigo-400",downtime:"bg-red-500/10 text-red-400" };
+                      const tagLabel: any = { purchase:lang==="RU"?"Закупка":"Сатып алуу",balance:lang==="RU"?"Баланс":"Баланс",reg:lang==="RU"?"Регистрация":"Каттоо",service:lang==="RU"?"ТО":"ТО",repair:lang==="RU"?"Ремонт":"Оңдоо",assign:lang==="RU"?"Оператор":"Оператор",insurance:lang==="RU"?"Страховка":"Камсыздандыруу",downtime:lang==="RU"?"Простой":"Токтоп туруу" };
+                      return events.map((evt: any, idx: any) => (
+                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/20 space-y-1 pb-1">
+                          <div className={`absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full ${dotColor[evt.type] || "bg-[#38a6e4]"} ring-4 ring-[#0c1e43] shrink-0`}></div>
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-white text-xs">{evt.title}</span>
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${tagColor[evt.type] || "bg-[#38a6e4]/10 text-[#38a6e4]"}`}>{tagLabel[evt.type] || evt.type}</span>
+                            </div>
+                            <span className="text-[10px] text-[#64748b] font-bold font-mono shrink-0">{evt.date}</span>
                           </div>
                           <p className="text-[11px] text-[#94a3b8] leading-tight font-medium">{evt.desc}</p>
                         </div>
@@ -3089,24 +3136,54 @@ function MainApp() {
                   </div>
                 </div>
 
-                {/* Dynamic Operational/Employment History of Employee */}
+                {/* Rich Employment Career History Timeline */}
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "История и трудовой путь сотрудника" : "Кызматкердин тарыхы жана эмгек жолу"}</h4>
-                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-4">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "Трудовая история и карьерный путь" : "Эмгек тарыхы жана карьера жолу"}</h4>
+                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-3.5">
                     {(() => {
-                      const historyEvents = [
-                        { date: "2026-05-20", title: lang === "RU" ? "Работа на объекте" : "Объекттеги жумуш", desc: lang === "RU" ? "Успешно вел земляные работы повышенной точности на строительном объекте Бизнес-Центр «Avangard»." : "«Avangard» бизнес-борбору курулуш объектинде жогорку тактыктагы жер жумуштарын ийгиликтүү аткарды.", status: "WORK" },
-                        { date: "2026-05-15", title: lang === "RU" ? "Закрепление за техникой" : "Техникага бекитүү", desc: lang === "RU" ? "Официально закреплен за специальной техникой Экскаватор CAT 320 на объекте ЖК «Avangard City»." : "Расмий түрдө ЖК «Avangard City» объектинде Экскаватор CAT 320 атайын техникасына бекитилди.", status: "COUPLING" },
-                        { date: "2026-05-01", title: lang === "RU" ? "Установление тарифной ставки" : "Тарифтик ставканы белгилөө", desc: lang === "RU" ? "Выдан приказ №П-104 об утверждении часовой тарифной ставки 800 сом/час." : "Сааттык тарифтик ставканы 800 сом/саат бекитүү жөнүндө №П-104 буйругу чыгарылды.", status: "DECREE" },
-                        { date: "2026-05-01", title: lang === "RU" ? "Прием в штат компании" : "Кызматкерди кабыл алуу", desc: lang === "RU" ? "Принят в штат строительной компании ОсОО «Авангард Стиль» на должность оператора специальной техники." : "«Авангард Стиль» ЖЧК курулуш компаниясынын штатына атайын техниканын оператору кызматына кабыл алынды.", status: "ADMISSION" }
+                      const driverCareer: any = {
+                        d1: [
+                          { date:"2026-05-25", type:"object",   title: lang==="RU"?"Переброс на объект":"Объектке которуу",             desc: lang==="RU"?"Переведён на ЖК «Avangard City» — приоритетный объект.":"«Avangard City» ЖКга которулду — артыкчылыктуу объект." },
+                          { date:"2026-05-15", type:"machine",  title: lang==="RU"?"Смена техники":"Техниканы алмаштыруу",              desc: lang==="RU"?"Переведён с CAT 308 на CAT 320 — повышение мощности.":"CAT 308ден CAT 320га которулду." },
+                          { date:"2026-05-01", type:"raise",    title: lang==="RU"?"Повышение ставки":"Ставканы жогорулатуу",           desc: lang==="RU"?"Ставка повышена: 750 → 800 сом/ч. Приказ №47-ОД.":"Ставка: 750 → 800 сом/саат. Буйрук №47-ОД." },
+                          { date:"2026-04-10", type:"vacation", title: lang==="RU"?"Ежегодный отпуск":"Жылдык өргүү",                   desc: lang==="RU"?"Оплачиваемый отпуск 14 кал. дней. Приказ №38-ОД.":"Акы төлөнүүчү өргүү 14 күн. Буйрук №38-ОД." },
+                          { date:"2026-03-01", type:"object",   title: lang==="RU"?"Назначение на объект":"Объектке дайындоо",           desc: lang==="RU"?"Закреплён за строительным объектом БЦ «Avangard».":"БЦ «Avangard» объектисине бекитилди." },
+                          { date:"2026-02-01", type:"hire",     title: lang==="RU"?"Зачисление в штат":"Штатка кирүү",                  desc: lang==="RU"?"Принят после успешного испытательного срока.":"Сыноо мөөнөтүн өтүп, туруктуу штатка кирди." },
+                          { date:"2025-11-01", type:"hire",     title: lang==="RU"?"Приём на работу":"Жумушка кабыл алуу",               desc: lang==="RU"?"Принят машинистом экскаватора. Испыт. срок 3 мес.":"Экскаватор машинисти. Сыноо мөөнөтү 3 ай." },
+                        ],
+                        d2: [
+                          { date:"2026-05-18", type:"object",   title: lang==="RU"?"Переброс на трассу":"Трассага которуу",              desc: lang==="RU"?"Направлен на Трасса Бишкек–Ош, горный коэф. 1.35.":"Бишкек-Ош трассасына жөнөтүлдү, коэф. 1.35." },
+                          { date:"2026-05-01", type:"raise",    title: lang==="RU"?"Пересмотр тарифа":"Тарифти кайра карап чыгуу",      desc: lang==="RU"?"Ставка по итогам аттестации: 800 → 850 сом/ч.":"Аттестациянын жыйынтыгы: 800 → 850 сом/саат." },
+                          { date:"2026-04-01", type:"machine",  title: lang==="RU"?"Закреплён за Volvo EC220":"Volvo EC220га бекитилди", desc: lang==="RU"?"Официально закреплён за Volvo EC220D. Приказ №31-ОД.":"Расмий Volvo EC220Dга бекитилди. Буйрук №31-ОД." },
+                          { date:"2026-01-10", type:"hire",     title: lang==="RU"?"Зачисление в штат":"Штатка кирүү",                  desc: lang==="RU"?"Принят после 3-мес. испытат. срока. Кат. B,C.":"3 айлык сыноодон кийин кабыл алынды. B,C кат." },
+                          { date:"2025-10-10", type:"hire",     title: lang==="RU"?"Приём на работу":"Жумушка кабыл алуу",               desc: lang==="RU"?"Принят по рекомендации главного механика.":"Башкы механиктин сунушу боюнча кабыл алынды." },
+                        ],
+                        d3: [
+                          { date:"2026-05-12", type:"vacation", title: lang==="RU"?"Больничный лист":"Ооруканалык барак",                 desc: lang==="RU"?"Больничный лист. 5 рабочих дней. Диагноз: ОРВИ.":"Ооруканалык барак. 5 жумуш күн. ОРВИ." },
+                          { date:"2026-04-20", type:"machine",  title: lang==="RU"?"Смена техники":"Техниканы алмаштыруу",               desc: lang==="RU"?"Переведён на бульдозер Komatsu D155A.":"Komatsu D155A бульдозерине которулду." },
+                          { date:"2026-03-01", type:"raise",    title: lang==="RU"?"Надбавка 5%":"5% кошумча",                           desc: lang==="RU"?"Надбавка 5% за стаж более 2 лет. Приказ №29-ОД.":"2 жылдан ашык стаж үчүн 5% кошумча. Буйрук №29-ОД." },
+                          { date:"2026-01-15", type:"hire",     title: lang==="RU"?"Зачисление в штат":"Штатка кирүү",                   desc: lang==="RU"?"Зачислен постоянным сотрудником.":"Туруктуу кызматкер болду." },
+                          { date:"2025-10-15", type:"hire",     title: lang==="RU"?"Приём на работу":"Жумушка кабыл алуу",               desc: lang==="RU"?"Принят оператором бульдозера. Стаж 4 года.":"Бульдозер операторунун кызматына кабыл алынды. 4 жыл стаж." },
+                        ],
+                      };
+                      const events = driverCareer[selectedDriver?.id || ""] || [
+                        { date:"2026-05-20", type:"object",   title: lang==="RU"?"Работа на объекте":"Объекттеги жумуш",             desc: lang==="RU"?"Смена выполнена в плановом режиме.":"Смена пландуу режимде аткарылды." },
+                        { date:"2026-05-01", type:"raise",    title: lang==="RU"?"Пересмотр ставки":"Ставканы кайра карап чыгуу",   desc: lang==="RU"?"Ставка пересмотрена по итогам аттестации.":"Аттестациянын жыйынтыгы боюнча ставка каралды." },
+                        { date:"2026-03-01", type:"machine",  title: lang==="RU"?"Закреплён за техникой":"Техникага бекитилди",     desc: lang==="RU"?"Официально закреплён за спецтехникой.":"Расмий түрдө спецтехникага бекитилди." },
+                        { date:"2026-01-10", type:"hire",     title: lang==="RU"?"Приём на работу":"Жумушка кабыл алуу",            desc: lang==="RU"?"Принят в штат компании.":"Компаниянын штатына кабыл алынды." },
                       ];
-
-                      return historyEvents.map((evt, idx) => (
-                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/30 space-y-1">
-                          <div className="absolute left-[-4.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#38a6e4] ring-4 ring-[#0c1e43]"></div>
-                          <div className="flex justify-between items-start text-xs">
-                            <span className="font-extrabold text-white">{evt.title}</span>
-                            <span className="text-[10px] text-[#64748b] font-bold font-mono">{evt.date}</span>
+                      const dotColor: any = { hire:"bg-green-500",raise:"bg-[#eab308]",transfer:"bg-[#38a6e4]",vacation:"bg-purple-400",machine:"bg-orange-400",object:"bg-sky-400",warn:"bg-red-400",dismiss:"bg-red-600" };
+                      const tagColor: any = { hire:"bg-green-500/10 text-green-400",raise:"bg-yellow-500/10 text-yellow-400",transfer:"bg-sky-500/10 text-sky-400",vacation:"bg-purple-500/10 text-purple-400",machine:"bg-orange-500/10 text-orange-400",object:"bg-sky-500/10 text-sky-400",warn:"bg-red-500/10 text-red-400",dismiss:"bg-red-500/10 text-red-400" };
+                      const tagLabel: any = { hire:lang==="RU"?"Кадры":"Кадр",raise:lang==="RU"?"Ставка":"Ставка",transfer:lang==="RU"?"Перевод":"Которуу",vacation:lang==="RU"?"Отпуск":"Өргүү",machine:lang==="RU"?"Техника":"Техника",object:lang==="RU"?"Объект":"Объект",warn:lang==="RU"?"Взыскание":"Жаза",dismiss:lang==="RU"?"Увольнение":"Бошотуу" };
+                      return events.map((evt: any, idx: any) => (
+                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/20 space-y-1 pb-1">
+                          <div className={`absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full ${dotColor[evt.type] || "bg-[#38a6e4]"} ring-4 ring-[#0c1e43] shrink-0`}></div>
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-white text-xs">{evt.title}</span>
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md ${tagColor[evt.type] || "bg-[#38a6e4]/10 text-[#38a6e4]"}`}>{tagLabel[evt.type] || evt.type}</span>
+                            </div>
+                            <span className="text-[10px] text-[#64748b] font-bold font-mono shrink-0">{evt.date}</span>
                           </div>
                           <p className="text-[11px] text-[#94a3b8] leading-tight font-medium">{evt.desc}</p>
                         </div>
@@ -3132,7 +3209,7 @@ function MainApp() {
         const daysInMonth = 31;
         const startBlankDays = 4; // May 2026 starts on Friday (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=7)
 
-        const driverShifts: Record<string, Record<number, { machine: string, object: string, hours: number, rate: number }>> = {
+        const driverShifts: any = {
           d1: {
             1: { machine: " CAT 320", object: "БЦ «Avangard»", hours: 8.0, rate: 800 },
             5: { machine: " CAT 320", object: "ЖК «Avangard City»", hours: 8.5, rate: 800 },
@@ -3311,6 +3388,214 @@ function MainApp() {
 
               <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
                 <button onClick={() => setCalendarDriver(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+                  {lang === "RU" ? "Закрыть" : "Жабуу"}
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* V2 Vehicle Shift Calendar Drawer */}
+      {calendarVehicle && (() => {
+        const daysInMonth = 31;
+        const startBlankDays = 4; // May 2026: starts Friday
+
+        const vehicleShifts: any = {
+          v1: {
+            1:  { operator: "Азамат Исмаилов",    object: "ЖК «Avangard City»",       hours: 8.0, fuel: 228 },
+            3:  { operator: "Азамат Исмаилов",    object: "БЦ «Avangard»",            hours: 8.5, fuel: 242 },
+            6:  { operator: "Азамат Исмаилов",    object: "ЖК «Manhattan»",           hours: 8.0, fuel: 228 },
+            10: { operator: "Азамат Исмаилов",    object: "ЖК «French Quarter»",      hours: 8.2, fuel: 234 },
+            14: { operator: "Азамат Исмаилов",    object: "БЦ «Avangard»",            hours: 7.5, fuel: 213 },
+            17: { operator: "Азамат Исмаилов",    object: "ЖК «Avangard City»",       hours: 8.0, fuel: 228 },
+            21: { operator: "Азамат Исмаилов",    object: "Трасса Бишкек–Ош",         hours: 9.0, fuel: 256 },
+            24: { operator: "Азамат Исмаилов",    object: "БЦ «Panorama Park»",       hours: 8.0, fuel: 228 },
+            28: { operator: "Азамат Исмаилов",    object: "ЖК «Елисейские Поля»",     hours: 8.5, fuel: 242 },
+          },
+          v2: {
+            2:  { operator: "Сергей Смирнов",     object: "БЦ «Россия»",              hours: 8.0, fuel: 192 },
+            5:  { operator: "Сергей Смирнов",     object: "ЖК «Ала-Тоо»",             hours: 8.5, fuel: 204 },
+            8:  { operator: "Сергей Смирнов",     object: "БЦ «Европа»",              hours: 8.0, fuel: 192 },
+            12: { operator: "Сергей Смирнов",     object: "ЖК «Avangard City»",       hours: 8.2, fuel: 197 },
+            15: { operator: "Сергей Смирнов",     object: "БЦ «Panorama Park»",       hours: 8.0, fuel: 192 },
+            19: { operator: "Сергей Смирнов",     object: "ЖК «Елисейские Поля»",     hours: 7.5, fuel: 180 },
+            22: { operator: "Сергей Смирнов",     object: "БЦ «Россия»",              hours: 8.5, fuel: 204 },
+            26: { operator: "Сергей Смирнов",     object: "Трасса Бишкек–Ош",         hours: 9.0, fuel: 216 },
+          },
+          v3: {
+            4:  { operator: "Улан Токтосунов",    object: "ЖК «Авангард Сити»",        hours: 8.0, fuel: 264 },
+            7:  { operator: "Улан Токтосунов",    object: "БЦ «Манхэттен»",            hours: 8.5, fuel: 281 },
+            11: { operator: "Улан Токтосунов",    object: "ЖК «Французский квартал»",  hours: 8.0, fuel: 264 },
+            16: { operator: "Улан Токтосунов",    object: "БЦ «Европа»",              hours: 8.2, fuel: 271 },
+            20: { operator: "Улан Токтосунов",    object: "ЖК «Авангард Сити»",        hours: 8.0, fuel: 264 },
+            25: { operator: "Улан Токтосунов",    object: "Трасса Бишкек–Ош",          hours: 9.0, fuel: 297 },
+            29: { operator: "Улан Токтосунов",    object: "БЦ «Авангард»",             hours: 8.5, fuel: 281 },
+          },
+          v4: {
+            3:  { operator: "Бекзод Рахимов",     object: "ЖК «Ала-Тоо»",             hours: 6.0, fuel: 144 },
+            9:  { operator: "Бекзод Рахимов",     object: "БЦ «Россия»",              hours: 6.5, fuel: 156 },
+            13: { operator: "Бекзод Рахимов",     object: "ЖК «Авангард Сити»",        hours: 6.0, fuel: 144 },
+            18: { operator: "Бекзод Рахимов",     object: "БЦ «Европа»",              hours: 6.5, fuel: 156 },
+            23: { operator: "Бекзод Рахимов",     object: "БЦ «Панорама Парк»",        hours: 6.0, fuel: 144 },
+            27: { operator: "Бекзод Рахимов",     object: "ЖК «Авангард Сити»",        hours: 6.0, fuel: 144 },
+          },
+          v5: {
+            5:  { operator: "Нурлан Жакыпов",     object: "ЖК «Авангард Сити»",        hours: 8.0, fuel: 168 },
+            9:  { operator: "Нурлан Жакыпов",     object: "БЦ «Европа»",              hours: 8.2, fuel: 172 },
+            13: { operator: "Нурлан Жакыпов",     object: "БЦ «Панорама Парк»",        hours: 8.0, fuel: 168 },
+            17: { operator: "Нурлан Жакыпов",     object: "ЖК «Салкын Төр II»",        hours: 8.5, fuel: 178 },
+            22: { operator: "Нурлан Жакыпов",     object: "ЖК «Елисейские поля»",      hours: 8.0, fuel: 168 },
+            26: { operator: "Нурлан Жакыпов",     object: "БЦ «Авангард»",             hours: 8.2, fuel: 172 },
+          },
+          v6: {
+            6:  { operator: "Жоробек Алиев",      object: "БЦ «Россия»",              hours: 8.0, fuel: 320 },
+            10: { operator: "Жоробек Алиев",      object: "БЦ «Москва»",              hours: 8.2, fuel: 328 },
+            14: { operator: "Жоробек Алиев",      object: "БЦ «Европа»",              hours: 8.0, fuel: 320 },
+            18: { operator: "Жоробек Алиев",      object: "БЦ «Панорама Парк»",        hours: 8.5, fuel: 340 },
+            23: { operator: "Жоробек Алиев",      object: "ЖК «Салкын Төр II»",        hours: 8.0, fuel: 320 },
+            28: { operator: "Жоробек Алиев",      object: "ЖК «Елисейские Поля»",      hours: 8.2, fuel: 328 },
+          },
+        };
+
+        const shifts = vehicleShifts[calendarVehicle.id] || {};
+        const weekdays = lang === "RU" ? ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"] : ["Дш","Шш","Шр","Бш","Жм","Иш","Жк"];
+        const monthName = lang === "RU" ? "Май 2026" : "Май 2026";
+
+        const totalWorkDays = Object.keys(shifts).length;
+        const totalHours: any = Object.values(shifts).reduce((s: any, sh: any) => s + sh.hours, 0);
+        const totalFuel: any = Object.values(shifts).reduce((s: any, sh: any) => s + sh.fuel, 0);
+
+        return (
+          <>
+            <div onClick={() => setCalendarVehicle(null)} className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110]" />
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#0c1e43]/90 border-l border-[#00417d]/30 z-[111] flex flex-col shadow-2xl backdrop-blur-xl">
+              <div className="p-5 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-400 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white">{lang === "RU" ? "Календарь работы техники" : "Техниканын жумуш календары"}</h3>
+                    <span className="text-xs text-[#38a6e4] font-bold block mt-0.5">{calendarVehicle.model}</span>
+                  </div>
+                </div>
+                <button onClick={() => setCalendarVehicle(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                {/* Stats strip */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: lang === "RU" ? "Смен" : "Смена", value: totalWorkDays, color: "text-green-400" },
+                    { label: lang === "RU" ? "Часов" : "Саат", value: `${totalHours.toFixed(1)}ч`, color: "text-[#38a6e4]" },
+                    { label: lang === "RU" ? "Топливо" : "Отун", value: `${totalFuel}л`, color: "text-[#eab308]" },
+                  ].map(st => (
+                    <div key={st.label} className="bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl p-3 text-center">
+                      <div className={`text-lg font-black ${st.color}`}>{st.value}</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mt-0.5">{st.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Month navigator */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-white uppercase tracking-widest">{monthName}</span>
+                  <span className="text-[10px] text-slate-400 font-bold">{calendarVehicle.plateNumber}</span>
+                </div>
+
+                {/* Weekday headers */}
+                <div className="grid grid-cols-7 gap-1">
+                  {weekdays.map(d => (
+                    <div key={d} className="text-center text-[10px] font-extrabold text-slate-500 uppercase pb-1">{d}</div>
+                  ))}
+                </div>
+
+                {/* Day grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: startBlankDays }).map((_, i) => (
+                    <div key={`blank-${i}`} />
+                  ))}
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
+                    const day = i + 1;
+                    const shift = shifts[day];
+                    const isSelected = selectedVehicleCalendarDate === day;
+                    const isToday = day === 27;
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (shift) setSelectedVehicleCalendarDate(day);
+                        }}
+                        className={`relative h-9 rounded-xl text-xs font-bold flex flex-col items-center justify-center transition-all
+                          ${shift
+                            ? isSelected
+                              ? "bg-green-500 text-white shadow-lg shadow-green-500/30 scale-105"
+                              : "bg-green-500/10 text-green-400 hover:bg-green-500/25 cursor-pointer"
+                            : isToday
+                              ? "bg-[#38a6e4]/10 text-[#38a6e4] border border-[#38a6e4]/30"
+                              : "text-slate-500 hover:bg-white/5"
+                          }`}
+                      >
+                        {day}
+                        {shift && (
+                          <span className={`absolute bottom-0.5 w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-green-400"}`} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected day log */}
+                {selectedVehicleCalendarDate ? (() => {
+                  const shift = shifts[selectedVehicleCalendarDate];
+                  if (!shift) return null;
+                  return (
+                    <div className="p-4 bg-[#00091b]/60 border border-green-500/20 rounded-xl space-y-3">
+                      <div className="flex items-center gap-2 border-b border-[#00417d]/20 pb-2">
+                        <div className="w-7 h-7 bg-green-500/10 rounded-lg flex items-center justify-center">
+                          <Calendar className="w-4 h-4 text-green-400" />
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-white text-xs">{lang === "RU" ? "Смена" : "Смена"} — {selectedVehicleCalendarDate} {lang === "RU" ? "мая 2026" : "май 2026"}</span>
+                          <span className="block text-[10px] text-[#64748b] font-bold">{calendarVehicle.model} · {calendarVehicle.plateNumber}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-[#0c1e43]/60 rounded-lg p-2.5">
+                          <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider mb-1">{lang === "RU" ? "Оператор" : "Оператор"}</span>
+                          <span className="font-extrabold text-white">{shift.operator}</span>
+                        </div>
+                        <div className="bg-[#0c1e43]/60 rounded-lg p-2.5">
+                          <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider mb-1">{lang === "RU" ? "Объект" : "Объект"}</span>
+                          <span className="font-extrabold text-[#38a6e4]">{shift.object}</span>
+                        </div>
+                        <div className="bg-[#0c1e43]/60 rounded-lg p-2.5">
+                          <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider mb-1">{lang === "RU" ? "Отработано" : "Иштелди"}</span>
+                          <span className="font-extrabold text-green-400">{shift.hours} ч</span>
+                        </div>
+                        <div className="bg-[#0c1e43]/60 rounded-lg p-2.5">
+                          <span className="block text-[9px] text-[#64748b] font-bold uppercase tracking-wider mb-1">{lang === "RU" ? "Топливо" : "Отун"}</span>
+                          <span className="font-extrabold text-[#eab308]">{shift.fuel} л</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })() : (
+                  <div className="p-5 border border-dashed border-[#00417d]/30 rounded-xl flex flex-col items-center justify-center gap-2 text-center">
+                    <Info className="w-6 h-6 mb-1 text-[#64748b]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      {lang === "RU" ? "Выберите подсвеченную дату для просмотра лога смены" : "Смен логун көрүү үчүн датаны тандаңыз"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
+                <button onClick={() => setCalendarVehicle(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white text-sm font-bold rounded-xl transition-colors">
                   {lang === "RU" ? "Закрыть" : "Жабуу"}
                 </button>
               </div>
