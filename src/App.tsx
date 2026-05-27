@@ -485,7 +485,7 @@ function MainApp() {
       timestamp: new Date().toISOString(),
       latitude: GEOLOCATION_PATH[simPathIndex].lat,
       longitude: GEOLOCATION_PATH[simPathIndex].lng,
-      driverName: driverObj?.name || "Машинист",
+      driverName: driverObj?.name || (lang === "RU" ? "Сотрудник" : "Кызматкер"),
       vehicleModel: vehicleObj?.model || "Спецтехника",
       vehiclePlate: vehicleObj?.plateNumber || "",
       details: "КРИТИЧЕСКИЙ УРОВЕНЬ: Резкое падение уровня топлива в баке (-15 Л)!"
@@ -971,7 +971,7 @@ function MainApp() {
                     <Users className="w-5 h-5" />
                   </div>
                   <span className="inline-flex items-center gap-1 text-[#10b981] font-bold text-xs bg-[#10b981]/10 px-2 py-0.5 rounded-full">
-                    +{drivers.length} машинистов
+                    +{drivers.length} {lang === "RU" ? "Сотрудников" : "Кызматкерлер"}
                   </span>
                 </div>
                 <div>
@@ -1142,7 +1142,7 @@ function MainApp() {
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
-                        <h4 className="text-xs font-bold text-yellow-500">У машиниста С. Смирнова</h4>
+                        <h4 className="text-xs font-bold text-yellow-500">{lang === "RU" ? "У сотрудника С. Смирнова" : "Кызматкер С. Смирновдо"}</h4>
                         <span className="text-[10px] text-[#64748b]">Допуск</span>
                       </div>
                       <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">Срок действия медсправки истекает через 14 дней.</p>
@@ -2044,7 +2044,7 @@ function MainApp() {
               <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 flex flex-col gap-2.5 shrink-0">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Идентификация смены</span>
                 <div>
-                  <label className="text-[10px] font-extrabold text-slate-700">Машинист / Оператор</label>
+                  <label className="text-[10px] font-extrabold text-slate-700">{lang === "RU" ? "Сотрудник" : "Кызматкер"}</label>
                   <select 
                     value={simDriverId}
                     onChange={(e) => setSimDriverId(e.target.value)}
@@ -2186,7 +2186,7 @@ function MainApp() {
                 <div className="flex flex-col bg-white border border-slate-200 rounded-xl divide-y divide-slate-200 overflow-hidden flex-grow min-h-[140px] text-xs font-semibold">
                   {!simDriverId ? (
                     <div className="flex-grow flex items-center justify-center text-center p-4 text-slate-400">
-                      Выберите машиниста, чтобы загрузить архив смен
+                      {lang === "RU" ? "Выберите сотрудника, чтобы загрузить архив смен" : "Кызматкерди тандаңыз, смендердин архивин жүктөө үчүн"}
                     </div>
                   ) : simHistory.length === 0 ? (
                     <div className="flex-grow flex items-center justify-center text-center p-4 text-slate-400">
@@ -2844,7 +2844,7 @@ function MainApp() {
 
                 {/* Active driver */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Машинист на смене</h4>
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "Сотрудник на смене" : "Сменадагы кызматкер"}</h4>
                   <div className="p-4 bg-[#00091b]/60 border border-[#00417d]/30 rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-xs border border-[#38a6e4]/20">
