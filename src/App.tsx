@@ -1753,20 +1753,18 @@ function MainApp() {
                     Учет условий местности объектов (Бишкек/Горы)
                   </span>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                <div className="overflow-x-hidden">
+                  <table className="w-full text-left border-collapse table-layout-fixed">
                     <thead>
                       <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
-                        <th className="p-4">Сотрудник</th>
-                        <th className="p-4">Активный объект</th>
-                        <th className="p-4">Коэфф. объекта</th>
-                        <th className="p-4">В движении (ч)</th>
-                        <th className="p-4">Простой (ч)</th>
-                        <th className="p-4">Ставка (₽/ч)</th>
-                        <th className="p-4">Штрафы/Премии (₽)</th>
-                        <th className="p-4">Итого к выплате</th>
-                        <th className="p-4">Статус</th>
-                        <th className="p-4 text-right">Действия</th>
+                        <th className="p-4 w-[22%]">Сотрудник</th>
+                        <th className="p-4 w-[20%]">Объект (Коэфф.)</th>
+                        <th className="p-4 w-[18%]">Движение / Простой</th>
+                        <th className="p-4 w-[10%]">Ставка</th>
+                        <th className="p-4 w-[10%]">Штраф / Премия</th>
+                        <th className="p-4 w-[10%] text-right">Итого</th>
+                        <th className="p-4 w-[10%] text-center">Статус</th>
+                        <th className="p-4 w-[10%] text-right"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#334155] text-xs font-semibold">
@@ -1793,48 +1791,50 @@ function MainApp() {
                         return (
                           <tr key={d.id} className="hover:bg-[#0c1e43]/40 transition-colors text-slate-200">
                             <td className="p-4 font-bold text-white flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-[10px]">
+                              <div className="w-7 h-7 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] flex items-center justify-center font-extrabold text-[10px] shrink-0">
                                 {d.name.split(" ").map(w=>w[0]).join("")}
                               </div>
-                              {d.name}
+                              <span className="truncate">{d.name}</span>
                             </td>
-                            <td className="p-4 text-slate-300">{objectName}</td>
                             <td className="p-4">
-                              <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${
+                              <span className="text-white font-bold block truncate">{objectName}</span>
+                              <span className={`inline-block mt-0.5 px-1.5 py-0.2 rounded font-extrabold text-[9px] ${
                                 multiplier > 1 ? "bg-red-500/20 text-red-400" : "bg-[#0c1e43] text-slate-400"
                               }`}>
                                 {multiplier}x
                               </span>
                             </td>
-                            <td className="p-4 text-white tabular-nums font-bold">{actH.toFixed(1)}</td>
-                            <td className="p-4 text-slate-400 tabular-nums">{idlH.toFixed(1)}</td>
-                            <td className="p-4 text-white tabular-nums">
+                            <td className="p-4 font-mono">
+                              <span className="text-white font-extrabold">{actH.toFixed(1)} ч</span>
+                              <span className="text-slate-500 text-[10px] font-medium block">Простой: {idlH.toFixed(1)} ч</span>
+                            </td>
+                            <td className="p-4 text-white font-bold font-mono">
                               {rate} ₽/ч
                             </td>
-                            <td className="p-4 tabular-nums">
+                            <td className="p-4">
                               <input 
                                 type="number" 
                                 value={adj}
                                 onChange={(e) => setManualAdjustments(prev => ({ ...prev, [d.id]: Number(e.target.value) }))}
-                                className={`w-20 h-7 border rounded px-1.5 font-bold text-center focus:border-[#38a6e4] outline-none bg-[#00091b] text-white ${
+                                className={`w-20 h-7 border rounded-lg px-2 font-bold text-center focus:border-[#38a6e4] outline-none bg-[#00091b] text-white ${
                                   adj >= 0 ? "border-green-800 text-green-400" : "border-red-800 text-red-400"
                                 }`}
                               />
                             </td>
-                            <td className="p-4 text-[#eab308] font-extrabold text-sm tabular-nums">
+                            <td className="p-4 text-[#eab308] font-black text-sm font-mono text-right whitespace-nowrap">
                               {Math.round(payout).toLocaleString("ru-RU")} ₽
                             </td>
-                            <td className="p-4">
+                            <td className="p-4 text-center">
                               {status === "PAID" ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/15 text-[#10b981] text-[10px] font-extrabold border border-[#10b981]/20 shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#10b981]/15 text-[#10b981] text-[10px] font-extrabold border border-[#10b981]/20 shadow-sm">
                                   Выплачено
                                 </span>
                               ) : status === "PROCESSING" ? (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] text-[10px] font-extrabold border border-[#38a6e4]/20 animate-pulse shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#38a6e4]/10 text-[#38a6e4] text-[10px] font-extrabold border border-[#38a6e4]/20 animate-pulse shadow-sm">
                                   В обработке
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-extrabold border border-blue-500/20 shadow-sm">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-extrabold border border-blue-500/20 shadow-sm">
                                   К выплате
                                 </span>
                               )}
@@ -1843,7 +1843,7 @@ function MainApp() {
                               {status === "PENDING" && (
                                 <button
                                   onClick={() => handlePayDriver(d.id, d.name, payout)}
-                                  className="h-8 px-3 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold text-xs rounded-lg transition-colors cursor-pointer shadow-md hover:shadow active:scale-95 duration-150"
+                                  className="h-8 px-4 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold text-xs rounded-xl transition-colors cursor-pointer shadow-md hover:shadow active:scale-95 duration-150 text-inverted"
                                 >
                                   Выплатить
                                 </button>
