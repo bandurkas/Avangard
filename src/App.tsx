@@ -1020,7 +1020,11 @@ function MainApp() {
                   {/* Active Live Driver Indicator */}
                   {simActive && (
                     <div 
-                      className="absolute z-30 flex flex-col items-center transition-all duration-1000"
+                      className="absolute z-30 flex flex-col items-center transition-all duration-1000 cursor-pointer group hover:scale-105"
+                      onClick={() => {
+                        const vehicle = vehicles.find(v => v.id === simVehicleId);
+                        if (vehicle) setSelectedVehicle(vehicle);
+                      }}
                       style={{
                         top: simObjectId === "o1" ? "35%" : simObjectId === "o2" ? "68%" : "22%",
                         left: simObjectId === "o1" ? "32%" : simObjectId === "o2" ? "58%" : "72%"
@@ -1114,7 +1118,7 @@ function MainApp() {
                 <table className="w-full text-left border-collapse bg-[#0c1e43]/90">
                   <thead>
                     <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">
-                      <th className="p-4">Сотрудник (Машинист)</th>
+                      <th className="p-4">Сотрудник</th>
                       <th className="p-4">Спецтехника</th>
                       <th className="p-4">Строительный объект</th>
                       <th className="p-4">Событие</th>
@@ -1665,7 +1669,7 @@ function MainApp() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
-                        <th className="p-4">Сотрудник (Машинист)</th>
+                        <th className="p-4">Сотрудник</th>
                         <th className="p-4">Активный объект</th>
                         <th className="p-4">Коэфф. объекта</th>
                         <th className="p-4">В движении (ч)</th>
@@ -2527,7 +2531,7 @@ function MainApp() {
             <h3 className="text-lg font-bold text-white mb-4">Выдать приказ о ставке</h3>
             <form onSubmit={handleOrderSubmit} className="space-y-4 text-xs font-bold">
               <div>
-                <label className="block text-slate-300 mb-1 font-bold">Сотрудник (Машинист)</label>
+                <label className="block text-slate-300 mb-1 font-bold">Сотрудник</label>
                 <select
                   value={orderForm.driverId}
                   onChange={(e) => setOrderForm({ ...orderForm, driverId: e.target.value })}
