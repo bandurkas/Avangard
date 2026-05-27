@@ -129,7 +129,8 @@ function MainApp() {
       addEmployee: "Добавить Сотрудника",
       addMachinery: "Добавить технику",
       createObject: "Создать объект",
-      issueDecree: "Выдать приказ на ставку",
+      issueDecree: "Добавить Приказ",
+      issueDecreeBtn: "Добавить Приказ",
       systemTitle: "Система управления спецтехникой, объектами и Учет • Кыргызстан",
       activeMachineryHeader: "Активная спецтехника на объекте",
       noMachinery: "Спецтехника в смене отсутствует",
@@ -151,7 +152,8 @@ function MainApp() {
       addEmployee: "Кызматкер кошуу",
       addMachinery: "Техника кошуу",
       createObject: "Объект түзүү",
-      issueDecree: "Ставкага буйрук берүү",
+      issueDecree: "Приказ кошуу",
+      issueDecreeBtn: "Приказ кошуу",
       systemTitle: "Спецтехниканы, объекттерди башкаруу жана Эсептөө системасы • Кыргызстан",
       activeMachineryHeader: "Объекттеги активдүү спецтехника",
       noMachinery: "Сменада спецтехника жок",
@@ -773,7 +775,7 @@ function MainApp() {
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <div className="flex items-center gap-3">
-              <span className="bg-[#eab308] text-slate-950 px-2 py-0.5 text-[10px] font-black rounded shadow-md uppercase tracking-wider">ERP V2.0 PRO</span>
+              
               <div className="flex items-center gap-3">
                 {/* Official Avangard Progress Logo Banner */}
                 <div className="bg-white/95 p-2 px-4 rounded-2xl border border-slate-200/50 shadow-lg flex items-center justify-center shrink-0 h-24 mt-0.5">
@@ -1694,7 +1696,7 @@ function MainApp() {
                     }}
                     className="h-9 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white text-xs font-bold rounded-xl shadow-lg transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
                   >
-                    <Plus className="w-3.5 h-3.5 text-white" /> Инициализировать приказ
+                    <Plus className="w-3.5 h-3.5 text-white" /> Оформить приказ
                   </button>
                 </div>
 
@@ -1820,14 +1822,13 @@ function MainApp() {
                   <table className="w-full text-left border-collapse table-layout-fixed">
                     <thead>
                       <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider">
-                        <th className="p-4 w-[22%]">Сотрудник</th>
-                        <th className="p-4 w-[20%]">Объект (Коэфф.)</th>
-                        <th className="p-4 w-[18%]">Движение / Простой</th>
-                        <th className="p-4 w-[10%]">Ставка</th>
-                        <th className="p-4 w-[10%]">Штраф / Премия</th>
-                        <th className="p-4 w-[10%] text-right">Итого</th>
-                        <th className="p-4 w-[10%] text-center">Статус</th>
-                        <th className="p-4 w-[10%] text-right"></th>
+                        <th className="p-4 w-[22%]">{lang === "RU" ? "Сотрудник" : "Кызматкер"}</th>
+                        <th className="p-4 w-[20%]">{lang === "RU" ? "Объект (Коэфф.)" : "Объект (Коэфф.)"}</th>
+                        <th className="p-4 w-[20%]">{lang === "RU" ? "Движение / Простой" : "Иштөө / Простой"}</th>
+                        <th className="p-4 w-[10%]">{lang === "RU" ? "Ставка" : "Ставка"}</th>
+                        <th className="p-4 w-[10%]">{lang === "RU" ? "Штраф / Премия" : "Корректировка"}</th>
+                        <th className="p-4 w-[10%] text-right">{lang === "RU" ? "Итого" : "Жалпы"}</th>
+                        <th className="p-4 w-[8%] text-center">{lang === "RU" ? "Статус" : "Статус"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#334155] text-xs font-semibold">
@@ -2757,7 +2758,7 @@ function MainApp() {
         let speed = 0;
         let distance = 0;
         let consumptionRate = 31.8;
-        let events = [{ time: "Вчера", text: "Смена завершена на объекте ЖК Ала-Тоо." }];
+        
         let driverPhoto = "—";
 
         if (isActiveSimVehicle) {
@@ -2769,10 +2770,7 @@ function MainApp() {
           speed = 35;
           distance = simDistance;
           consumptionRate = 31.8;
-          events = [
-            { time: "Только что", text: `ТС на смене, объект: ЖК Ала-Тоо` },
-            { time: "Смена начата", text: "Сигнал телеметрии GPS и уровня бака стабилен" }
-          ];
+
           driverPhoto = driverName.split(" ").map(w=>w[0]).join("");
         } else if (selectedVehicle.id === "v3") {
           driverName = "Сергей Смирнов";
@@ -2782,11 +2780,7 @@ function MainApp() {
           speed = 0;
           distance = 42.1;
           consumptionRate = 36.5;
-          events = [
-            { time: "12:45", text: "Установка опор автокрана верифицирована датчиками" },
-            { time: "10:15", text: "Остановка на объекте Трасса Бишкек-Ош" },
-            { time: "08:30", text: "Начало смены (База)" }
-          ];
+
           driverPhoto = "СС";
         }
 
@@ -2936,16 +2930,30 @@ function MainApp() {
                   </div>
                 </div>
 
-                {/* Events Log */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">Лог событий ТС</h4>
-                  <div className="border border-[#00417d]/30 rounded-xl divide-y divide-[#334155] overflow-hidden bg-[#00091b]/40">
-                    {events.map((ev, i) => (
-                      <div key={i} className="p-3 text-xs font-semibold flex justify-between items-start gap-4 text-slate-300">
-                        <span>{ev.text}</span>
-                        <span className="text-[10px] text-[#64748b] shrink-0 font-mono">{ev.time}</span>
-                      </div>
-                    ))}
+                {/* Dynamic Operational History of Machinery */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "История и жизненный цикл техники" : "Техниканын тарыхы жана өмүр бою цикли"}</h4>
+                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-4">
+                    {(() => {
+                      const historyEvents = [
+                        { date: "2026-05-26", title: lang === "RU" ? "Плановый ремонт гидравлики" : "Гидравликанын пландуу оңдоосу", desc: lang === "RU" ? "Успешно проведен плановый осмотр и ремонт гидравлической системы и шлангов высокого давления." : "Гидравликалык системаны жана жогорку басымдагы шлангдарды текшерүү жана оңдоо аяктады.", status: "COMPLETED" },
+                        { date: "2026-05-25", title: lang === "RU" ? "Регистрация Госгортехнадзора КР" : "КР Мамтоосуу көзөмөлүнүн каттоосу", desc: lang === "RU" ? "Техника прошла полную экспертизу промышленной безопасности и аттестована инспектором Госгортехнадзора КР." : "Техника өнөр жай коопсуздугунун экспертизасынан өтүп, КР Мамтоосуу көзөмөлүнүн инспектору тарабынан тастыкталды.", status: "SUCCESS" },
+                        { date: "2026-05-12", title: lang === "RU" ? "Техническое обслуживание (ТО-2)" : "Техникалык тейлөө (ТО-2)", desc: lang === "RU" ? "Замена моторного масла Shell Rimula, масляного, топливного и воздушного фильтров." : "Shell Rimula мотор майын, май, күйүүчү май жана аба чыпкаларын алмаштыруу.", status: "SERVICE" },
+                        { date: "2026-04-15", title: lang === "RU" ? "Закрепление сотрудника" : "Кызматкерди бекитүү", desc: lang === "RU" ? "За единицей техники официально закреплен постоянный оператор-машинист Азамат Исмаилов." : "Техника бирдигине расмий түрдө туруктуу оператор-машинист Азамат Исмаилов бекитилди.", status: "COUPLING" },
+                        { date: "2026-03-10", title: lang === "RU" ? "Постановка на баланс автопарка" : "Баланска кабыл алуу", desc: lang === "RU" ? "Спецтехника принята в эксплуатацию и поставлена на баланс ОсОО «Авангард Стиль»." : "Атайын техника эксплуатацияга кабыл алынып, «Авангард Стиль» ЖЧКнын балансына коюлду.", status: "ADMISSION" }
+                      ];
+
+                      return historyEvents.map((evt, idx) => (
+                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/30 space-y-1">
+                          <div className="absolute left-[-4.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#38a6e4] ring-4 ring-[#0c1e43]"></div>
+                          <div className="flex justify-between items-start text-xs">
+                            <span className="font-extrabold text-white">{evt.title}</span>
+                            <span className="text-[10px] text-[#64748b] font-bold font-mono">{evt.date}</span>
+                          </div>
+                          <p className="text-[11px] text-[#94a3b8] leading-tight font-medium">{evt.desc}</p>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
 
@@ -3072,6 +3080,32 @@ function MainApp() {
                         <span className="text-[#eab308] font-extrabold text-sm whitespace-nowrap">{hist.rate} сом/ч</span>
                       </div>
                     )) || <span className="text-slate-400 text-xs">—</span>}
+                  </div>
+                </div>
+
+                {/* Dynamic Operational/Employment History of Employee */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-[#94a3b8] uppercase tracking-wider pl-1">{lang === "RU" ? "История и трудовой путь сотрудника" : "Кызматкердин тарыхы жана эмгек жолу"}</h4>
+                  <div className="p-4 bg-[#00091b]/50 border border-[#00417d]/30 rounded-xl space-y-4">
+                    {(() => {
+                      const historyEvents = [
+                        { date: "2026-05-20", title: lang === "RU" ? "Работа на объекте" : "Объекттеги жумуш", desc: lang === "RU" ? "Успешно вел земляные работы повышенной точности на строительном объекте Бизнес-Центр «Avangard»." : "«Avangard» бизнес-борбору курулуш объектинде жогорку тактыктагы жер жумуштарын ийгиликтүү аткарды.", status: "WORK" },
+                        { date: "2026-05-15", title: lang === "RU" ? "Закрепление за техникой" : "Техникага бекитүү", desc: lang === "RU" ? "Официально закреплен за специальной техникой Экскаватор CAT 320 на объекте ЖК «Avangard City»." : "Расмий түрдө ЖК «Avangard City» объектинде Экскаватор CAT 320 атайын техникасына бекитилди.", status: "COUPLING" },
+                        { date: "2026-05-01", title: lang === "RU" ? "Установление тарифной ставки" : "Тарифтик ставканы белгилөө", desc: lang === "RU" ? "Выдан приказ №П-104 об утверждении часовой тарифной ставки 800 сом/час." : "Сааттык тарифтик ставканы 800 сом/саат бекитүү жөнүндө №П-104 буйругу чыгарылды.", status: "DECREE" },
+                        { date: "2026-05-01", title: lang === "RU" ? "Прием в штат компании" : "Кызматкерди кабыл алуу", desc: lang === "RU" ? "Принят в штат строительной компании ОсОО «Авангард Стиль» на должность оператора специальной техники." : "«Авангард Стиль» ЖЧК курулуш компаниясынын штатына атайын техниканын оператору кызматына кабыл алынды.", status: "ADMISSION" }
+                      ];
+
+                      return historyEvents.map((evt, idx) => (
+                        <div key={idx} className="relative pl-5 border-l border-[#38a6e4]/30 space-y-1">
+                          <div className="absolute left-[-4.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#38a6e4] ring-4 ring-[#0c1e43]"></div>
+                          <div className="flex justify-between items-start text-xs">
+                            <span className="font-extrabold text-white">{evt.title}</span>
+                            <span className="text-[10px] text-[#64748b] font-bold font-mono">{evt.date}</span>
+                          </div>
+                          <p className="text-[11px] text-[#94a3b8] leading-tight font-medium">{evt.desc}</p>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
 
