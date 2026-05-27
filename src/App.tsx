@@ -781,23 +781,15 @@ function MainApp() {
             <div className="flex items-center gap-3">
               
               <div className="flex items-center gap-3">
-                {/* Official Avangard Progress Logo — Premium Frosted Glass Pill */}
-                <div className="relative flex items-center shrink-0">
-                  <div
-                    className="flex items-center bg-white rounded-2xl px-5 py-2.5 transition-all duration-300 hover:scale-[1.02]"
-                    style={{
-                      boxShadow: '0 2px 20px rgba(56,166,228,0.20), 0 1px 6px rgba(0,9,27,0.22)',
-                      border: '1px solid rgba(255,255,255,0.70)',
-                    }}
-                  >
-                    <img
-                      src="/logo.png"
-                      className="h-20 w-auto object-contain select-none"
-                      alt="Avangard Progress"
-                      draggable={false}
-                      style={{ maxWidth: '200px', display: 'block' }}
-                    />
-                  </div>
+                {/* Official Avangard Progress Logo */}
+                <div className="relative flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-[1.03]">
+                  <img
+                    src="/logo.png"
+                    className="h-16 w-auto object-contain select-none drop-shadow-lg"
+                    alt="Avangard Progress"
+                    draggable={false}
+                    style={{ maxWidth: '300px', display: 'block', filter: 'drop-shadow(0 2px 12px rgba(56,166,228,0.25))' }}
+                  />
                 </div>
               </div>
             </div>
