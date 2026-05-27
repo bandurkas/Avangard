@@ -1005,13 +1005,10 @@ function MainApp() {
                   <div className="p-2 bg-[#38a6e4]/10 rounded-lg border border-[#38a6e4]/20 text-[#38a6e4]">
                     <Truck className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[#94a3b8] font-bold text-xs bg-[#334155] px-2 py-0.5 rounded-full">
-                    Всего {vehicles.length} ТС
-                  </span>
                 </div>
                 <div>
                   <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Спецтехника в работе</p>
-                  <h3 className="text-3xl font-extrabold tracking-tight">{activeVehiclesCount}</h3>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{activeVehiclesCount} / {vehicles.length}</h3>
                 </div>
               </div>
               {/* Card 3 */}
