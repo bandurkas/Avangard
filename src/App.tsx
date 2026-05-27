@@ -708,8 +708,8 @@ function MainApp() {
               <span className="bg-[#eab308] text-slate-950 px-2 py-0.5 text-[10px] font-black rounded shadow-md uppercase tracking-wider">ERP V2.0 PRO</span>
               <div className="flex items-center gap-3">
                 {/* Official Avangard Progress Logo Banner */}
-                <div className="bg-white/95 p-1 px-2 rounded-xl border border-slate-200/50 shadow-md flex items-center justify-center shrink-0 h-10 mt-0.5">
-                  <img src="/logo.png" className="h-7 w-auto object-contain" alt="Avangard Progress Logo" />
+                <div className="bg-white/95 p-2 px-4 rounded-2xl border border-slate-200/50 shadow-lg flex items-center justify-center shrink-0 h-24 mt-0.5">
+                  <img src="/logo.png" className="h-20 w-auto object-contain" alt="Avangard Progress Logo" />
                 </div>
               </div>
             </div>
