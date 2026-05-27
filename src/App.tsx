@@ -118,6 +118,8 @@ interface TimeLog {
 
 function MainApp() {
   const [lang, setLang] = useState<"RU" | "KG">("RU");
+  const [calendarDriver, setCalendarDriver] = useState<Driver | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<number | null>(null);
   
   const translations = {
     RU: {
@@ -738,18 +740,18 @@ function MainApp() {
   };
 
   // V2: Simulated payment handler
-  const [driverPaidStatuses, setDriverPaidStatuses] = useState<Record<string, "PAID" | "PENDING" | "PROCESSING">>({
+  const [driverPaidStatuses] = useState<Record<string, "PAID" | "PENDING" | "PROCESSING">>({
     d1: "PAID",
     d2: "PENDING"
   });
   
-  const handlePayDriver = (id: string, name: string, amount: number) => {
-    setDriverPaidStatuses(prev => ({ ...prev, [id]: "PROCESSING" }));
-    setTimeout(() => {
-      setDriverPaidStatuses(prev => ({ ...prev, [id]: "PAID" }));
-      showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} сом водителю ${name}!`, "success");
-    }, 1200);
-  };
+  // const handlePayDriver = (id: string, name: string, amount: number) => {
+  //   setDriverPaidStatuses(prev => ({ ...prev, [id]: "PROCESSING" }));
+  //   setTimeout(() => {
+  //     setDriverPaidStatuses(prev => ({ ...prev, [id]: "PAID" }));
+  //     showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} сом водителю ${name}!`, "success");
+  //   }, 1200);
+  // };
 
   const getDriverPaidStatus = (id: string) => {
     return driverPaidStatuses[id] || "PENDING";
@@ -1177,7 +1179,7 @@ function MainApp() {
             {/* Recent Events Log Table */}
             <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl overflow-hidden flex flex-col">
               <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
-                <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Оперативный Журнал (Старт/Стоп/Телеметрия)</h3>
+                <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">{lang === "RU" ? "Оперативный Журнал" : "Ыкчам журнал"}</h3>
                 <span className="text-xs text-[#38a6e4] font-bold flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   Моментальная синхронизация с датчиков
@@ -1342,6 +1344,16 @@ function MainApp() {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex justify-end gap-1.5">
+                              <button 
+                                onClick={() => {
+                                  setCalendarDriver(d);
+                                  setSelectedCalendarDate(null);
+                                }}
+                                className="p-2 text-slate-400 hover:text-green-400 hover:bg-[#0c1e43] transition-colors rounded-full cursor-pointer"
+                                title={lang === "RU" ? "Календарь смен" : "Смендик календарь"}
+                              >
+                                <Calendar className="w-4 h-4" />
+                              </button>
                               <button 
                                 onClick={() => {
                                   setEditingDriver(d);
@@ -1901,27 +1913,6 @@ function MainApp() {
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-extrabold border border-blue-500/20 shadow-sm">
                                   К выплате
                                 </span>
-                              )}
-                            </td>
-                            <td className="p-4 text-right">
-                              {status === "PENDING" && (
-                                <button
-                                  onClick={() => handlePayDriver(d.id, d.name, payout)}
-                                  className="h-8 px-4 bg-[#10b981] hover:bg-[#059669] text-white font-extrabold text-xs rounded-xl transition-colors cursor-pointer shadow-md hover:shadow active:scale-95 duration-150 text-inverted"
-                                >
-                                  Выплатить
-                                </button>
-                              )}
-                              {status === "PAID" && (
-                                <button
-                                  onClick={() => setDriverPaidStatuses(prev => ({ ...prev, [d.id]: "PENDING" }))}
-                                  className="text-[10px] text-slate-400 hover:text-red-400 font-bold uppercase cursor-pointer"
-                                >
-                                  Сбросить
-                                </button>
-                              )}
-                              {status === "PROCESSING" && (
-                                <span className="text-[10px] text-[#38a6e4] font-bold uppercase">Банк...</span>
                               )}
                             </td>
                           </tr>
@@ -3114,6 +3105,198 @@ function MainApp() {
               <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
                 <button onClick={() => setSelectedDriver(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
                   Закрыть
+                </button>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* V2 Slide-over Employee Shift Calendar Drawer */}
+      {calendarDriver && (() => {
+        const daysInMonth = 31;
+        const startBlankDays = 4; // May 2026 starts on Friday (Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6, Sun=7)
+
+        const driverShifts: Record<string, Record<number, { machine: string, object: string, hours: number, rate: number }>> = {
+          d1: {
+            1: { machine: " CAT 320", object: "БЦ «Avangard»", hours: 8.0, rate: 800 },
+            5: { machine: " CAT 320", object: "ЖК «Avangard City»", hours: 8.5, rate: 800 },
+            10: { machine: " CAT 320", object: "ЖК «Manhattan»", hours: 8.0, rate: 800 },
+            15: { machine: " CAT 320", object: "ЖК «French Quarter»", hours: 8.2, rate: 800 },
+            20: { machine: " CAT 320", object: "БЦ «Россия»", hours: 8.5, rate: 800 },
+            25: { machine: " CAT 320", object: "ЖК «Елисейские Поля»", hours: 8.0, rate: 800 }
+          },
+          d2: {
+            2: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.0, rate: 850 },
+            8: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.2, rate: 850 },
+            12: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.0, rate: 850 },
+            15: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.5, rate: 850 },
+            18: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.0, rate: 850 },
+            24: { machine: "Liebherr LTM 1050", object: "Tamchy Resort", hours: 8.5, rate: 850 }
+          },
+          d3: {
+            3: { machine: "Бульдозер Shantui SD16", object: "ЖК «Avangard City»", hours: 8.0, rate: 750 },
+            6: { machine: "Бульдозер Shantui SD16", object: "БЦ «Москва»", hours: 8.2, rate: 750 },
+            11: { machine: "Бульдозер Shantui SD16", object: "БЦ «Европа»", hours: 8.0, rate: 750 },
+            14: { machine: "Бульдозер Shantui SD16", object: "БЦ «Panorama Park»", hours: 8.5, rate: 750 },
+            19: { machine: "Бульдозер Shantui SD16", object: "ЖК «Салкын Төр II»", hours: 8.0, rate: 750 },
+            23: { machine: "Бульдозер Shantui SD16", object: "ЖК «Елисейские Поля»", hours: 8.2, rate: 750 }
+          },
+          d4: {
+            4: { machine: "CAT 320", object: "БЦ «Avangard»", hours: 8.0, rate: 780 },
+            7: { machine: "CAT 320", object: "ЖК «Manhattan»", hours: 8.5, rate: 780 },
+            10: { machine: "CAT 320", object: "ЖК «French Quarter»", hours: 8.0, rate: 780 },
+            16: { machine: "CAT 320", object: "БЦ «Россия»", hours: 8.2, rate: 780 },
+            21: { machine: "CAT 320", object: "БЦ «Москва»", hours: 8.0, rate: 780 },
+            27: { machine: "CAT 320", object: "ЖК «Салкын Төр II»", hours: 8.5, rate: 780 }
+          },
+          d5: {
+            5: { machine: "Фронтальный погрузчик", object: "ЖК «Avangard City»", hours: 8.0, rate: 720 },
+            9: { machine: "Фронтальный погрузчик", object: "БЦ «Европа»", hours: 8.2, rate: 720 },
+            13: { machine: "Фронтальный погрузчик", object: "БЦ «Panorama Park»", hours: 8.0, rate: 720 },
+            17: { machine: "Фронтальный погрузчик", object: "ЖК «Салкын Төр II»", hours: 8.5, rate: 720 },
+            22: { machine: "Фронтальный погрузчик", object: "ЖК «Елисейские Поля»", hours: 8.0, rate: 720 },
+            26: { machine: "Фронтальный погрузчик", object: "БЦ «Avangard»", hours: 8.2, rate: 720 }
+          },
+          d6: {
+            6: { machine: "Liebherr LTM 1050", object: "БЦ «Россия»", hours: 8.0, rate: 880 },
+            10: { machine: "Liebherr LTM 1050", object: "БЦ «Москва»", hours: 8.2, rate: 880 },
+            14: { machine: "Liebherr LTM 1050", object: "БЦ «Европа»", hours: 8.0, rate: 880 },
+            18: { machine: "Liebherr LTM 1050", object: "БЦ «Panorama Park»", hours: 8.5, rate: 880 },
+            23: { machine: "Liebherr LTM 1050", object: "ЖК «Салкын Төр II»", hours: 8.0, rate: 880 },
+            28: { machine: "Liebherr LTM 1050", object: "ЖК «Елисейские Поля»", hours: 8.2, rate: 880 }
+          }
+        };
+
+        const shifts = driverShifts[calendarDriver.id] || {};
+        const weekdays = lang === "RU" ? ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"] : ["Дш", "Шш", "Шр", "Бш", "Жм", "Иш", "Жш"];
+
+        return (
+          <>
+            <div onClick={() => setCalendarDriver(null)} className="fixed inset-0 bg-[#00091b]/70 backdrop-blur-sm z-[110]"></div>
+            <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[460px] bg-[#0c1e43]/90 border-l border-[#00417d]/30 shadow-2xl z-[120] flex flex-col transition-all duration-300 animate-fadeIn">
+              <div className="p-5 border-b border-[#00417d]/30 flex justify-between items-center bg-[#00091b]/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-500/10 text-green-400 flex items-center justify-center border border-green-500/20">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white">{lang === "RU" ? "Календарь смен сотрудника" : "Кызматкердин смендик календары"}</h3>
+                    <span className="text-xs text-[#38a6e4] font-bold block mt-0.5">{calendarDriver.name}</span>
+                  </div>
+                </div>
+                <button onClick={() => setCalendarDriver(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-[#0c1e43] cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-grow overflow-y-auto p-5 space-y-6">
+                
+                <div className="flex justify-between items-center bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl p-3">
+                  <span className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                    Май 2026
+                  </span>
+                  <span className="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded font-extrabold border border-green-500/20 uppercase">
+                    {Object.keys(shifts).length} {lang === "RU" ? "Смен отработано" : "Иштеген смен"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-[#64748b] uppercase tracking-wider">
+                  {weekdays.map((wd, i) => (
+                    <div key={i} className="py-1">{wd}</div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1.5">
+                  {Array.from({ length: startBlankDays }).map((_, idx) => (
+                    <div key={`blank-${idx}`} className="aspect-square bg-transparent rounded-lg flex items-center justify-center text-xs text-slate-600 font-bold opacity-30 select-none">
+                      {27 + idx}
+                    </div>
+                  ))}
+
+                  {Array.from({ length: daysInMonth }).map((_, idx) => {
+                    const day = idx + 1;
+                    const shift = shifts[day];
+                    const isSelected = selectedCalendarDate === day;
+
+                    return (
+                      <div
+                        key={`day-${day}`}
+                        onClick={() => {
+                          if (shift) setSelectedCalendarDate(day);
+                        }}
+                        className={`aspect-square rounded-xl border flex flex-col items-center justify-center relative cursor-pointer transition-all duration-150 ${
+                          shift 
+                            ? isSelected
+                              ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20 scale-105"
+                              : "bg-green-500/10 hover:bg-green-500/20 border-green-500/30 text-green-400 hover:scale-102"
+                            : "bg-[#00091b]/40 border-[#00417d]/20 text-slate-500 hover:border-[#00417d]/40"
+                        }`}
+                      >
+                        <span className="text-xs font-extrabold">{day}</span>
+                        {shift && !isSelected && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 absolute bottom-1.5"></span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {selectedCalendarDate ? (() => {
+                  const shift = shifts[selectedCalendarDate];
+                  if (!shift) return null;
+
+                  return (
+                    <div className="p-4 bg-green-500/5 border border-green-500/20 rounded-xl space-y-3.5 animate-fadeIn relative overflow-hidden">
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-green-500"></div>
+                      <div className="flex justify-between items-center pl-1">
+                        <span className="text-[10px] text-green-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                          {lang === "RU" ? `Смена отработана ${selectedCalendarDate} мая` : `${selectedCalendarDate}-май смен ийгиликтүү бүттү`}
+                        </span>
+                        <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full font-black border border-green-500/20">
+                          {shift.hours} {lang === "RU" ? "ч" : "саат"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-xs pl-1">
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-[#64748b] font-bold block uppercase tracking-wider">{lang === "RU" ? "Спецтехника" : "Атайын техника"}</span>
+                          <span className="font-extrabold text-white">{shift.machine}</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-[#64748b] font-bold block uppercase tracking-wider">{lang === "RU" ? "Строительный объект" : "Курулуш объекти"}</span>
+                          <span className="font-extrabold text-white truncate block">{shift.object}</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-[#64748b] font-bold block uppercase tracking-wider">{lang === "RU" ? "Часовая ставка" : "Сааттык ставка"}</span>
+                          <span className="font-extrabold text-[#eab308]">{shift.rate} сом/ч</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] text-[#64748b] font-bold block uppercase tracking-wider">{lang === "RU" ? "Начислено за смену" : "Буйрук чегерилди"}</span>
+                          <span className="font-extrabold text-white">{(shift.hours * shift.rate).toLocaleString("ru-RU")} сом</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-[#00417d]/20 my-1"></div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold pl-1 uppercase">
+                        <FileSignature className="w-3.5 h-3.5 text-green-400" />
+                        <span>{lang === "RU" ? "Подпись: Иванов И.И. (ЦП КР)" : "Кол тамга: Иванов И.И. (ЦП КР)"}</span>
+                      </div>
+                    </div>
+                  );
+                })() : (
+                  <div className="p-5 border border-dashed border-[#00417d]/30 rounded-xl flex flex-col items-center justify-center text-center text-[#64748b] h-32">
+                    <Info className="w-6 h-6 mb-2 text-[#64748b]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                      {lang === "RU" ? "Выберите подсвеченную дату, чтобы просмотреть лог смены" : "Смен логун көрүү үчүн тандалган күндү басыңыз"}
+                    </span>
+                  </div>
+                )}
+
+              </div>
+
+              <div className="p-4 border-t border-[#00417d]/30 bg-[#00091b]/30 flex gap-2">
+                <button onClick={() => setCalendarDriver(null)} className="flex-1 h-11 bg-[#0c1e43] hover:bg-slate-700 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">
+                  {lang === "RU" ? "Закрыть" : "Жабуу"}
                 </button>
               </div>
             </div>
