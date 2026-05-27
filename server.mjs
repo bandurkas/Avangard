@@ -8,9 +8,9 @@ app.use(express.json());
 let drivers = [
   { 
     id: "d1", 
-    name: "Иван Иванов", 
-    licenseNumber: "77 АВ 123456", 
-    phone: "+7 (999) 111-22-33", 
+    name: "Азамат Исмаилов", 
+    licenseNumber: "77 KG 123456", 
+    phone: "+996 (555) 111-22-33", 
     status: "FREE",
     permitCategories: ["Гусеничный экскаватор", "Фронтальный погрузчик"],
     activeRate: 800,
@@ -20,7 +20,7 @@ let drivers = [
     medCertificateExpiry: "2027-11-20",
     specialPermits: "Работа в горных условиях, Допуск на экскаваторы CAT",
     documents: [
-      { name: "Удостоверение тракториста-машиниста", type: "ВУ", file: "traktorist_d1.pdf" },
+      { name: "Водительское Удостоверение (ВУ)", type: "ВУ", file: "traktorist_d1.pdf" },
       { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d1.pdf" }
     ],
     rateHistory: [
@@ -31,8 +31,8 @@ let drivers = [
   { 
     id: "d2", 
     name: "Сергей Смирнов", 
-    licenseNumber: "77 ВС 654321", 
-    phone: "+7 (999) 222-33-44", 
+    licenseNumber: "77 KG 654321", 
+    phone: "+996 (707) 222-33-44", 
     status: "ACTIVE",
     permitCategories: ["Кран стреловой Liebherr", "Тяжелый бульдозер"],
     activeRate: 850,
@@ -48,6 +48,90 @@ let drivers = [
     rateHistory: [
       { date: "2026-02-15", rate: 650, reason: "Приказ о приеме на работу П-15" },
       { date: "2026-05-15", rate: 850, reason: "Приказ о повышении квалификации П-112" }
+    ]
+  },
+  { 
+    id: "d3", 
+    name: "Улан Асанбеков", 
+    licenseNumber: "77 KG 998877", 
+    phone: "+996 (770) 555-66-77", 
+    status: "FREE",
+    permitCategories: ["Тяжелый бульдозер"],
+    activeRate: 750,
+    birthDate: "1988-09-15",
+    experienceYears: 8,
+    licenseCategories: "B, C, E",
+    medCertificateExpiry: "2028-02-12",
+    specialPermits: "Допуск на технику Shantui, Бульдозерные работы в песчаных карьерах",
+    documents: [
+      { name: "Водительское Удостоверение (ВУ)", type: "ВУ", file: "traktorist_d3.pdf" },
+      { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d3.pdf" }
+    ],
+    rateHistory: [
+      { date: "2026-03-01", rate: 750, reason: "Приказ о приеме на работу П-33" }
+    ]
+  },
+  { 
+    id: "d4", 
+    name: "Канат Бакиров", 
+    licenseNumber: "77 KG 554433", 
+    phone: "+996 (500) 888-99-00", 
+    status: "FREE",
+    permitCategories: ["Гусеничный экскаватор"],
+    activeRate: 780,
+    birthDate: "1992-06-25",
+    experienceYears: 6,
+    licenseCategories: "B, C",
+    medCertificateExpiry: "2028-05-18",
+    specialPermits: "Земляные работы повышенной точности",
+    documents: [
+      { name: "Водительское Удостоверение (ВУ)", type: "ВУ", file: "traktorist_d4.pdf" },
+      { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d4.pdf" }
+    ],
+    rateHistory: [
+      { date: "2026-03-10", rate: 780, reason: "Приказ о приеме на работу П-40" }
+    ]
+  },
+  { 
+    id: "d5", 
+    name: "Нурбек Токтосунов", 
+    licenseNumber: "77 KG 221100", 
+    phone: "+996 (555) 333-44-55", 
+    status: "FREE",
+    permitCategories: ["Фронтальный погрузчик"],
+    activeRate: 720,
+    birthDate: "1990-11-05",
+    experienceYears: 7,
+    licenseCategories: "B, C",
+    medCertificateExpiry: "2027-08-30",
+    specialPermits: "Погрузочно-разгрузочные работы высокой скорости",
+    documents: [
+      { name: "Водительское Удостоверение (ВУ)", type: "ВУ", file: "traktorist_d5.pdf" },
+      { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d5.pdf" }
+    ],
+    rateHistory: [
+      { date: "2026-04-01", rate: 720, reason: "Приказ о приеме на работу П-55" }
+    ]
+  },
+  { 
+    id: "d6", 
+    name: "Айбек Садыков", 
+    licenseNumber: "77 KG 887766", 
+    phone: "+996 (700) 444-55-66", 
+    status: "FREE",
+    permitCategories: ["Кран стреловой Liebherr"],
+    activeRate: 880,
+    birthDate: "1983-02-18",
+    experienceYears: 13,
+    licenseCategories: "B, C, D, E",
+    medCertificateExpiry: "2027-06-15",
+    specialPermits: "Допуск на автокраны Liebherr, Высотные монтажные работы",
+    documents: [
+      { name: "Допуск машиниста крана Liebherr", type: "Лицензия", file: "crane_d6.pdf" },
+      { name: "Медицинская книжка водителя", type: "Медсправка", file: "med_d6.pdf" }
+    ],
+    rateHistory: [
+      { date: "2026-04-15", rate: 880, reason: "Приказ о приеме на работу П-70" }
     ]
   }
 ];
@@ -91,7 +175,7 @@ let vehicles = [
     documents: [
       { name: "СТС автокрана", type: "СТС", file: "sts_v3.pdf" },
       { name: "ПТС автокрана", type: "ПТС", file: "pts_v3.pdf" },
-      { name: "Разрешение Ростехнадзора", type: "Ростехнадзор", file: "rosteh_v3.pdf" }
+      { name: "Разрешение Госгортехнадзора КР", type: "Госгортехнадзор КР", file: "techcontrol_v3.pdf" }
     ]
   },
   { 
@@ -117,13 +201,21 @@ let vehicles = [
 ];
 
 let objects = [
-  { id: "o1", name: "ЖК Ала-Тоо (Бишкек)", latitude: 42.8580, longitude: 74.6050, difficultyType: "PLAIN", rateMultiplier: 1.0 },
-  { id: "o2", name: "Трасса Бишкек-Ош (Горный участок)", latitude: 42.6120, longitude: 74.2380, difficultyType: "MOUNTAIN", rateMultiplier: 1.35 },
-  { id: "o3", name: "Склад Кара-Балта", latitude: 42.8150, longitude: 73.8500, difficultyType: "PLAIN", rateMultiplier: 1.0 }
+  { id: "o1", name: "БЦ «Avangard» (ул. Токтогула 125/1)", latitude: 42.8732, longitude: 74.6094, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o2", name: "Tamchy Resort (Иссык-Куль, с. Тамчы)", latitude: 42.5645, longitude: 76.6710, difficultyType: "MOUNTAIN", rateMultiplier: 1.35 },
+  { id: "o3", name: "ЖК «Avangard City» (район парка «Адинай»)", latitude: 42.8395, longitude: 74.5861, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o4", name: "ЖК «Manhattan» (ул. Коенкозова/Сыдыкова)", latitude: 42.8765, longitude: 74.5932, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o5", name: "ЖК «French Quarter» (микрорайон Асанбай)", latitude: 42.8420, longitude: 74.6148, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o6", name: "БЦ «Россия» (центр города)", latitude: 42.8780, longitude: 74.6045, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o7", name: "БЦ «Европа» (Бишкек)", latitude: 42.8752, longitude: 74.6012, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o8", name: "БЦ «Москва» (ул. Раззакова)", latitude: 42.8715, longitude: 74.5980, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o9", name: "БЦ «Panorama Park» (ул. Токомбаева)", latitude: 42.8700, longitude: 74.6220, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o10", name: "ЖК «Салкын Төр II» (Бишкек)", latitude: 42.8340, longitude: 74.6310, difficultyType: "PLAIN", rateMultiplier: 1.0 },
+  { id: "o11", name: "ЖК «Елисейские Поля» (ул. Байтик Баатыра)", latitude: 42.8280, longitude: 74.6190, difficultyType: "PLAIN", rateMultiplier: 1.0 }
 ];
 
 let orders = [
-  { id: "ord1", driverId: "d1", driverName: "Иван Иванов", orderNumber: "П-104", dateEffective: "2026-05-01", oldRate: 600, newRate: 800, status: "SIGNED", signedAt: "2026-05-01T08:15:00Z" },
+  { id: "ord1", driverId: "d1", driverName: "Азамат Исмаилов", orderNumber: "П-104", dateEffective: "2026-05-01", oldRate: 600, newRate: 800, status: "SIGNED", signedAt: "2026-05-01T08:15:00Z" },
   { id: "ord2", driverId: "d2", driverName: "Сергей Смирнов", orderNumber: "П-112", dateEffective: "2026-05-15", oldRate: 650, newRate: 850, status: "SIGNED", signedAt: "2026-05-15T09:20:00Z" }
 ];
 

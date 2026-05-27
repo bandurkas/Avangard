@@ -32,7 +32,8 @@ import {
   CheckCircle,
   Map,
   Calendar,
-  Eye
+  Eye,
+  Globe
 } from "lucide-react";
 
 // Preset GPS routing path centered around Bishkek and mountainous areas
@@ -116,6 +117,73 @@ interface TimeLog {
 }
 
 function MainApp() {
+  const [lang, setLang] = useState<"RU" | "KG">("RU");
+  
+  const translations = {
+    RU: {
+      dashboard: "Пульт Управления",
+      employees: "Сотрудники",
+      machinery: "Спецтехника",
+      objects: "Объекты",
+      accounting: "Учет",
+      addEmployee: "Добавить Сотрудника",
+      addMachinery: "Добавить технику",
+      createObject: "Создать объект",
+      issueDecree: "Выдать приказ на ставку",
+      systemTitle: "Система управления спецтехникой, объектами и Учет • Кыргызстан",
+      activeMachineryHeader: "Активная спецтехника на объекте",
+      noMachinery: "Спецтехника в смене отсутствует",
+      notifications: "Уведомления",
+      driverLicenseNum: "Номер ВУ",
+      operatorJournal: "Оперативный Журнал",
+      fleetFuelAvg: "СР. РАСХОД ГСМ ПАРКА",
+      mapTitle: "Схема строительных объектов (LIVE)",
+      employeeLabel: "Сотрудник",
+      vanguardProgress: "АВАНГАРД ПРОГРЕСС",
+      vanguardStyle: "АВАНГАРД СТИЛЬ",
+    },
+    KG: {
+      dashboard: "Башкаруу Пульти",
+      employees: "Кызматкерлер",
+      machinery: "Спецтехника",
+      objects: "Объекттер",
+      accounting: "Эсептөө",
+      addEmployee: "Кызматкер кошуу",
+      addMachinery: "Техника кошуу",
+      createObject: "Объект түзүү",
+      issueDecree: "Ставкага буйрук берүү",
+      systemTitle: "Спецтехниканы, объекттерди башкаруу жана Эсептөө системасы • Кыргызстан",
+      activeMachineryHeader: "Объекттеги активдүү спецтехника",
+      noMachinery: "Сменада спецтехника жок",
+      notifications: "Билдирүүлөр",
+      driverLicenseNum: "Номер ВУ",
+      operatorJournal: "Ыкчам журнал",
+      fleetFuelAvg: "ПАРКТЫН ОРТОЧО КҮЙҮҮЧҮ МАЙ ЧЫГЫМЫ",
+      mapTitle: "Курулуш объекттеринин схемасы (LIVE)",
+      employeeLabel: "Кызматкер",
+      vanguardProgress: "АВАНГАРД ПРОГРЕСС",
+      vanguardStyle: "АВАНГАРД СТИЛЬ",
+    }
+  };
+  const t = translations[lang];
+
+  const getObjectCoords = (id: string) => {
+    const coords: Record<string, { top: string, left: string }> = {
+      o1: { top: "28%", left: "42%" },
+      o2: { top: "76%", left: "82%" },
+      o3: { top: "62%", left: "34%" },
+      o4: { top: "32%", left: "24%" },
+      o5: { top: "54%", left: "56%" },
+      o6: { top: "22%", left: "46%" },
+      o7: { top: "25%", left: "38%" },
+      o8: { top: "36%", left: "30%" },
+      o9: { top: "58%", left: "68%" },
+      o10: { top: "48%", left: "76%" },
+      o11: { top: "66%", left: "48%" },
+    };
+    return coords[id] || { top: "22%", left: "72%" };
+  };
+
   const [isLight, setIsLight] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "vehicles" | "objects" | "payroll">("overview");
   const queryClient = useQueryClient();
@@ -450,7 +518,7 @@ function MainApp() {
     }));
 
     setActiveFuelDrainAlert(null);
-    showNotification(`Выписан штраф ${fineAmount} ₽ водителю ${alert.driverName} за слив топлива.`, "success");
+    showNotification(`Выписан штраф ${fineAmount} сом водителю ${alert.driverName} за слив топлива.`, "success");
   };
 
   // V2: Mobile Order E-Sign
@@ -677,7 +745,7 @@ function MainApp() {
     setDriverPaidStatuses(prev => ({ ...prev, [id]: "PROCESSING" }));
     setTimeout(() => {
       setDriverPaidStatuses(prev => ({ ...prev, [id]: "PAID" }));
-      showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} ₽ водителю ${name}!`, "success");
+      showNotification(`Успешно выплачено ${Math.round(amount).toLocaleString("ru-RU")} сом водителю ${name}!`, "success");
     }, 1200);
   };
 
@@ -713,7 +781,7 @@ function MainApp() {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-[#94a3b8] mt-1.5 font-semibold pl-1">Центральная система управления спецтехникой, объектами и Payroll • Кыргызстан</p>
+            <p className="text-xs text-[#94a3b8] mt-1.5 font-semibold pl-1">{t.systemTitle}</p>
           </div>
           <div className="flex gap-2 items-center">
             {/* Dynamic Theme Switcher */}
@@ -732,6 +800,16 @@ function MainApp() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
+            </button>
+            {/* Dynamic Language Toggle */}
+            <button
+              type="button"
+              onClick={() => setLang(lang === "RU" ? "KG" : "RU")}
+              className="h-10 px-3 bg-[#0c1e43] hover:bg-[#38a6e4]/20 border border-[#00417d]/30 text-white rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-lg hover:shadow-md transition-all active:scale-95 font-bold text-xs select-none shrink-0"
+              title={lang === "RU" ? "Переключить на кыргызский язык" : "Орус тилине которуу"}
+            >
+              <Globe className="w-3.5 h-3.5 text-[#38a6e4]" />
+              <span>{lang === "RU" ? "RU" : "KG"}</span>
             </button>
             {(activeTab === "drivers" || activeTab === "vehicles" || activeTab === "objects" || activeTab === "payroll") && (
               <button 
@@ -781,10 +859,10 @@ function MainApp() {
                 className="h-10 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white font-bold text-sm rounded-xl flex items-center gap-2 hover:shadow-md transition-all active:scale-95 cursor-pointer shadow-lg"
               >
                 <Plus className="w-4 h-4" />
-                {activeTab === "drivers" && "Нанять водителя"}
-                {activeTab === "vehicles" && "Добавить технику"}
-                {activeTab === "objects" && "Создать объект"}
-                {activeTab === "payroll" && "Выдать приказ на ставку"}
+                {activeTab === "drivers" && t.addEmployee}
+                {activeTab === "vehicles" && t.addMachinery}
+                {activeTab === "objects" && t.createObject}
+                {activeTab === "payroll" && t.issueDecree}
               </button>
             )}
           </div>
@@ -801,7 +879,7 @@ function MainApp() {
             }`}
           >
             <TrendingUp className="w-4 h-4" />
-            Пульт Управления
+            {t.dashboard}
           </button>
           <button
             onClick={() => setActiveTab("drivers")}
@@ -812,7 +890,7 @@ function MainApp() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Сотрудники
+            {t.employees}
           </button>
           <button
             onClick={() => setActiveTab("vehicles")}
@@ -823,7 +901,7 @@ function MainApp() {
             }`}
           >
             <Wrench className="w-4 h-4" />
-            Спецтехника
+            {t.machinery}
           </button>
           <button
             onClick={() => setActiveTab("objects")}
@@ -834,7 +912,7 @@ function MainApp() {
             }`}
           >
             <MapPin className="w-4 h-4" />
-            Объекты работ (Бишкек)
+            {t.objects}
           </button>
           <button
             onClick={() => setActiveTab("payroll")}
@@ -845,7 +923,7 @@ function MainApp() {
             }`}
           >
             <Wallet className="w-4 h-4" />
-            Учет
+            {t.accounting}
           </button>
         </div>
 
@@ -872,7 +950,7 @@ function MainApp() {
                     onClick={() => handleApplyFuelFine(activeFuelDrainAlert)}
                     className="flex-1 md:flex-none h-9 px-4 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg transition-colors cursor-pointer"
                   >
-                    Выписать штраф 1 800 ₽
+                    Выписать штраф 1 800 сом
                   </button>
                   <button 
                     onClick={() => setActiveFuelDrainAlert(null)}
@@ -940,7 +1018,7 @@ function MainApp() {
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-3xl font-extrabold tracking-tight">{getAverageFuelConsumption()} <span className="text-sm font-normal text-[#94a3b8]">л/100км</span></h3>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{getAverageFuelConsumption()} <span className="text-sm font-normal text-[#94a3b8]">л/ч</span></h3>
                 </div>
               </div>
               {/* Card 4 */}
@@ -964,10 +1042,10 @@ function MainApp() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Map Canvas Card */}
-              <div className="lg:col-span-2 bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl overflow-hidden flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
-                  <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Схема строительных объектов (Бишкек LIVE)</h3>
-                  <div className="flex items-center gap-1.5 text-[#10b981] text-xs font-bold bg-[#10b981]/10 px-2.5 py-1 rounded-full">
+              <div className={`lg:col-span-2 border rounded-2xl overflow-hidden flex flex-col h-[420px] transition-colors ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0c1e43]/90 border-[#00417d]/30 shadow-2xl"}`}>
+                <div className={`p-4 border-b flex justify-between items-center transition-colors ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#00091b]/70 border-[#00417d]/30"}`}>
+                  <h3 className={`font-extrabold text-sm tracking-wider uppercase ${isLight ? "text-slate-800" : "text-white"}`}>{t.mapTitle}</h3>
+                  <div className="flex items-center gap-1.5 text-[#10b981] text-xs font-black bg-[#10b981]/25 px-2.5 py-1 rounded-full uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-ping"></span>
                     <span>Телеметрия LIVE</span>
                   </div>
@@ -996,10 +1074,7 @@ function MainApp() {
                       key={obj.id}
                       onClick={() => setSelectedObject(obj)}
                       className="absolute z-20 flex flex-col items-center cursor-pointer group/marker"
-                      style={{
-                        top: obj.id === "o1" ? "35%" : obj.id === "o2" ? "68%" : "22%",
-                        left: obj.id === "o1" ? "32%" : obj.id === "o2" ? "58%" : "72%"
-                      }}
+                      style={getObjectCoords(obj.id)}
                     >
                       <span className="bg-[#09142d] border border-[#00417d]/30 text-[9px] font-bold px-1.5 py-0.5 rounded shadow-lg text-[#f8fafc] mb-1 group-hover/marker:bg-[#38a6e4] group-hover/marker:border-[#38a6e4] transition-colors flex items-center gap-1 select-none">
                         <MapPin className="w-2.5 h-2.5 text-[#38a6e4] group-hover/marker:text-white" />
@@ -1020,10 +1095,7 @@ function MainApp() {
                         const vehicle = vehicles.find(v => v.id === simVehicleId);
                         if (vehicle) setSelectedVehicle(vehicle);
                       }}
-                      style={{
-                        top: simObjectId === "o1" ? "35%" : simObjectId === "o2" ? "68%" : "22%",
-                        left: simObjectId === "o1" ? "32%" : simObjectId === "o2" ? "58%" : "72%"
-                      }}
+                      style={getObjectCoords(simObjectId)}
                     >
                       <div className="relative -top-7">
                         <span className="bg-[#38a6e4] text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 border border-white">
@@ -1041,30 +1113,30 @@ function MainApp() {
                   )}
 
                   {/* Legend */}
-                  <div className="absolute bottom-4 left-4 bg-[#09142d]/95 backdrop-blur-sm border border-[#00417d]/30 rounded-xl p-2.5 shadow-xl flex gap-4 text-xs font-bold">
+                  <div className={`absolute bottom-4 left-4 backdrop-blur-sm rounded-xl p-2.5 shadow-xl flex gap-4 text-xs font-bold border transition-colors ${isLight ? "bg-white/95 border-slate-200 text-slate-800" : "bg-[#09142d]/95 border-[#38a6e4]/30 text-white"}`}>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-[#38a6e4]"></div>
-                      <span>Строительный объект</span>
+                      <span>{lang === "RU" ? "Строительный объект" : "Курулуш объекти"}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-                      <span>Горный сектор (1.35x)</span>
+                      <span className={isLight ? "text-red-600" : "text-red-400 font-extrabold"}>{lang === "RU" ? "Горный сектор (1.35x)" : "Тоолуу сектор (1.35x)"}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Maintenance Notifications Feed */}
-              <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-2xl flex flex-col h-[420px]">
-                <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 backdrop-blur-sm flex justify-between items-center">
+              <div className={`border rounded-2xl flex flex-col h-[420px] transition-colors ${isLight ? "bg-white border-slate-200 shadow-sm" : "bg-[#0c1e43]/90 border-[#00417d]/30 shadow-2xl"}`}>
+                <div className={`p-4 border-b flex justify-between items-center transition-colors ${isLight ? "bg-slate-50 border-slate-200" : "bg-[#00091b]/70 border-[#00417d]/30"}`}>
                   <div className="flex items-center gap-2 text-[#38a6e4]">
                     <Wrench className="w-4 h-4" />
-                    <h3 className="font-bold text-sm tracking-wide text-[#f8fafc]">Мониторинг Документов</h3>
+                    <h3 className={`font-extrabold text-sm tracking-wider uppercase ${isLight ? "text-slate-800" : "text-white"}`}>{t.notifications}</h3>
                   </div>
-                  <span className="bg-[#208bc9] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">СТС / ПТС</span>
+                  <span className="bg-[#38a6e4]/20 border border-[#38a6e4]/40 text-[#38a6e4] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">СТС / ПТС</span>
                 </div>
                 
-                <div className="flex-grow p-4 flex flex-col gap-3 overflow-y-auto bg-[#00091b]/40">
+                <div className={`flex-grow p-4 flex flex-col gap-3 overflow-y-auto ${isLight ? "bg-slate-50/50" : "bg-[#00091b]/40"}`}>
                   {/* Alert 1 */}
                   <div className="p-3 border border-yellow-500/20 bg-yellow-500/5 rounded-xl flex gap-3 relative overflow-hidden">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500"></div>
@@ -1086,14 +1158,14 @@ function MainApp() {
                         <h4 className="text-xs font-bold text-slate-200">Кран Liebherr (KG 777 BSB)</h4>
                         <span className="text-[10px] text-[#64748b]">ПТС</span>
                       </div>
-                      <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">Документ «Разрешение Ростехнадзора» прикреплен и верифицирован.</p>
+                      <p className="text-xs text-[#94a3b8] mt-1 font-semibold leading-tight">{lang === 'RU' ? 'Документ «Разрешение Госгортехнадзора КР» прикреплен и верифицирован.' : '«КР Мамтоосуу көзөмөлүнүн уруксаты» документи тиркелди жана текшерилди.'}</p>
                       <button className="mt-2 text-[#38a6e4] text-[10px] font-bold uppercase hover:underline" onClick={() => setSelectedVehicle(vehicles[1])}>Просмотр СТС/ПТС</button>
                     </div>
                   </div>
                   
-                  <div className="p-4 border border-dashed border-[#00417d]/30 rounded-xl flex flex-col items-center justify-center text-center text-[#64748b] h-32 mt-auto">
-                    <Info className="w-6 h-6 mb-2 text-[#64748b]" />
-                    <span className="text-[11px] font-semibold">Все документы спецтехники заверены в Ростехнадзоре.</span>
+                  <div className={`p-4 border border-dashed rounded-xl flex flex-col items-center justify-center text-center h-32 mt-auto transition-colors ${isLight ? "border-slate-200 text-slate-500 bg-slate-50" : "border-[#00417d]/30 text-[#64748b]"}`}>
+                    <Info className="w-6 h-6 mb-2 text-[#38a6e4]" />
+                    <span className="text-[11px] font-bold">{lang === "RU" ? "Все документы спецтехники заверены в Госгортехнадзоре КР." : "Бардык спецтехникалык документтер КР Мамтоосуу көзөмөлүндө күбөлөндүрүлгөн."}</span>
                   </div>
                 </div>
               </div>
@@ -1214,7 +1286,7 @@ function MainApp() {
                   <thead>
                     <tr className="border-b border-[#00417d]/30 bg-[#00091b]/40 text-[#94a3b8] text-xs font-bold uppercase tracking-wider">
                       <th className="p-4">ФИО Водителя</th>
-                      <th className="p-4">Номер тракторного ВУ</th>
+                      <th className="p-4">{t.driverLicenseNum}</th>
                       <th className="p-4">Категории спецтехники</th>
                       <th className="p-4">Текущая ставка</th>
                       <th className="p-4">Статус</th>
@@ -1250,7 +1322,7 @@ function MainApp() {
                               )) || <span className="text-slate-400 text-xs">—</span>}
                             </div>
                           </td>
-                          <td className="p-4 text-[#eab308] font-extrabold">{d.activeRate || 750} ₽/ч</td>
+                          <td className="p-4 text-[#eab308] font-extrabold">{d.activeRate || 750} сом/ч</td>
                           <td className="p-4">
                             {d.status === "ACTIVE" ? (
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#10b981]/10 text-[#10b981] text-xs font-bold border border-[#10b981]/20">
@@ -1545,7 +1617,7 @@ function MainApp() {
                   <div>
                     <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Фонд оплаты (ФОТ)</p>
                     <h3 className="text-3xl font-extrabold tracking-tight">
-                      {Math.round(totalPayroll).toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]">₽</span>
+                      {Math.round(totalPayroll).toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]"> сом</span>
                     </h3>
                   </div>
                 </div>
@@ -1563,7 +1635,7 @@ function MainApp() {
                   <div>
                     <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Средняя ставка</p>
                     <h3 className="text-3xl font-extrabold tracking-tight">
-                      {avgRate} <span className="text-sm font-normal text-[#94a3b8]">₽/ч</span>
+                      {avgRate} <span className="text-sm font-normal text-[#94a3b8]"> сом/ч</span>
                     </h3>
                   </div>
                 </div>
@@ -1601,7 +1673,7 @@ function MainApp() {
                   <div>
                     <p className="text-xs text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Штрафы и надбавки</p>
                     <h3 className={`text-3xl font-extrabold tracking-tight ${totalAdjustments < 0 ? "text-red-400" : "text-[#f8fafc]"}`}>
-                      {totalAdjustments >= 0 ? "+" : ""}{totalAdjustments.toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]">₽</span>
+                      {totalAdjustments >= 0 ? "+" : ""}{totalAdjustments.toLocaleString("ru-RU")} <span className="text-sm font-normal text-[#94a3b8]"> сом</span>
                     </h3>
                   </div>
                 </div>
@@ -1655,12 +1727,12 @@ function MainApp() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[#00417d]/30 bg-[#00091b]/80 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider sticky top-0 z-10">
-                          <th className="p-3">Номер приказа</th>
-                          <th className="p-3">Сотрудник</th>
-                          <th className="p-3">Срок действия</th>
-                          <th className="p-3">Тарифная сетка</th>
-                          <th className="p-3">Статус</th>
-                          <th className="p-3 text-right">Действия</th>
+                          <th className="p-3 w-[15%] text-left whitespace-nowrap">{lang === "RU" ? "Приказ" : "Буйрук"}</th>
+                          <th className="p-3 w-[25%] text-left whitespace-nowrap">{lang === "RU" ? "Сотрудник" : "Кызматкер"}</th>
+                          <th className="p-3 w-[20%] text-left whitespace-nowrap">{lang === "RU" ? "Дата ввода" : "Датасы"}</th>
+                          <th className="p-3 w-[20%] text-left whitespace-nowrap">{lang === "RU" ? "Ставка" : "Ставка"}</th>
+                          <th className="p-3 w-[12%] text-left whitespace-nowrap">{lang === "RU" ? "Статус" : "Статус"}</th>
+                          <th className="p-3 w-[8%] text-right whitespace-nowrap"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#334155] text-xs font-semibold">
@@ -1700,7 +1772,7 @@ function MainApp() {
                               </td>
                               <td className="p-3 text-slate-300">
                                 <span className="line-through text-slate-500 mr-1.5">{ord.oldRate}</span>
-                                <span className="text-[#38a6e4] font-black">{ord.newRate} ₽/ч</span>
+                                <span className="text-[#38a6e4] font-black">{ord.newRate} сом/ч</span>
                               </td>
                               <td className="p-3">
                                 {ord.status === "SIGNED" ? (
@@ -1719,7 +1791,7 @@ function MainApp() {
                                   onClick={() => setActiveViewDoc({
                                     name: `Приказ №${ord.orderNumber} о пересмотре тарифной ставки`,
                                     file: `order-${ord.orderNumber.toLowerCase()}-signed.pdf`,
-                                    type: `Приказ об установлении тарифа водителя ${ord.driverName} (${ord.newRate} ₽/ч)`
+                                    type: `Приказ об установлении тарифа водителя ${ord.driverName} (${ord.newRate} сом/ч)`
                                   })}
                                   className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] bg-[#0c1e43] hover:bg-[#38a6e4] text-[#38a6e4] hover:text-white border border-[#38a6e4]/30 rounded-lg font-bold transition-all cursor-pointer shadow-sm active:scale-95 text-inverted"
                                   title="Открыть и просмотреть приказ"
@@ -1739,7 +1811,7 @@ function MainApp() {
               {/* Spreadsheet Billing Table */}
               <div className="bg-[#0c1e43]/90 rounded-xl border border-[#00417d]/30 overflow-hidden">
                 <div className="p-4 border-b border-[#00417d]/30 bg-[#00091b]/70 flex justify-between items-center">
-                  <h3 className="font-extrabold text-sm tracking-wide text-white">Ведомость расчетов и начисления Payroll</h3>
+                  <h3 className="font-extrabold text-sm tracking-wide text-white">{lang === "RU" ? "Ведомость расчетов и начисления Учет" : "Эсептөө жана чегерүү ведомосту"}</h3>
                   <span className="text-[10px] font-extrabold bg-[#38a6e4]/10 text-[#38a6e4] px-2.5 py-1 rounded-full uppercase tracking-wide">
                     Учет условий местности объектов (Бишкек/Горы)
                   </span>
@@ -1800,7 +1872,7 @@ function MainApp() {
                               <span className="text-slate-500 text-[10px] font-medium block">Простой: {idlH.toFixed(1)} ч</span>
                             </td>
                             <td className="p-4 text-white font-bold font-mono">
-                              {rate} ₽/ч
+                              {rate} сом/ч
                             </td>
                             <td className="p-4">
                               <input 
@@ -1813,7 +1885,7 @@ function MainApp() {
                               />
                             </td>
                             <td className="p-4 text-[#eab308] font-black text-sm font-mono text-right whitespace-nowrap">
-                              {Math.round(payout).toLocaleString("ru-RU")} ₽
+                              {Math.round(payout).toLocaleString("ru-RU")} сом
                             </td>
                             <td className="p-4 text-center">
                               {status === "PAID" ? (
@@ -1884,7 +1956,7 @@ function MainApp() {
                       <div key={d.id} className="space-y-1">
                         <div className="flex justify-between text-xs font-bold">
                           <span className="text-white">{d.name}</span>
-                          <span className="text-slate-300">{Math.round(percent)}% ({Math.round(payout).toLocaleString("ru-RU")} ₽)</span>
+                          <span className="text-slate-300">{Math.round(percent)}% ({Math.round(payout).toLocaleString("ru-RU")} сом)</span>
                         </div>
                         <div className="w-full h-3 bg-[#000511] rounded-full overflow-hidden border border-[#00417d]/30">
                           <div 
@@ -1925,12 +1997,11 @@ function MainApp() {
           <div className="bg-[#f8fafc] flex-grow rounded-[20px] overflow-hidden flex flex-col relative select-none text-slate-900">
             
             {/* Simulator Mobile App Header */}
-            <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-4 shrink-0">
-              <span className="font-extrabold text-base text-slate-800 tracking-tight flex items-center gap-1">
-                <Truck className="w-4 h-4 text-[#38a6e4]" />
-                АВАНГАРД
-              </span>
-              <span className="text-[10px] font-extrabold bg-[#f1f5f9] text-slate-600 px-2 py-0.5 rounded tracking-wide uppercase">Спецтехника</span>
+            <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-2 shrink-0">
+              <div className="flex items-center gap-2 h-full">
+                <img src="/logo.png" className="h-8 w-auto object-contain" alt="Avangard Progress Logo" />
+                <span className="font-extrabold text-sm text-slate-800 tracking-tight">{t.vanguardProgress}</span>
+              </div>
             </header>
 
             {/* Mobile View Screen Scrollable */}
@@ -1945,7 +2016,7 @@ function MainApp() {
                   </div>
                   <div className="text-xs text-slate-800 space-y-1">
                     <p className="font-bold">Уважаемый {showMobileSignOrder.driverName},</p>
-                    <p className="leading-tight">Приказом руководства ваша часовая ставка повышается: <span className="line-through text-slate-500">{showMobileSignOrder.oldRate}</span> → <span className="font-extrabold text-green-700">{showMobileSignOrder.newRate} ₽/ч</span>.</p>
+                    <p className="leading-tight">Приказом руководства ваша часовая ставка повышается: <span className="line-through text-slate-500">{showMobileSignOrder.oldRate}</span> → <span className="font-extrabold text-green-700">{showMobileSignOrder.newRate} сом/ч</span>.</p>
                   </div>
                   
                   {/* Visual Signature pad area */}
@@ -2104,7 +2175,7 @@ function MainApp() {
                   </div>
                   <div className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-center shadow-sm">
                     <span className="block text-[8px] text-slate-400 uppercase tracking-wide font-extrabold mb-0.5">Текущая ставка</span>
-                    <span className="text-slate-800 font-bold">{simDriverId ? getDriverRate(simDriverId) : "—"} ₽</span>
+                    <span className="text-slate-800 font-bold">{simDriverId ? getDriverRate(simDriverId) : "—"} сом</span>
                   </div>
                 </div>
               </div>
@@ -2618,7 +2689,7 @@ function MainApp() {
                 >
                   <option value="">Выберите водителя...</option>
                   {drivers.map(d => (
-                    <option key={d.id} value={d.id}>{d.name} (текущая ставка: {d.activeRate} ₽)</option>
+                    <option key={d.id} value={d.id}>{d.name} (текущая ставка: {d.activeRate} сом)</option>
                   ))}
                 </select>
               </div>
@@ -2645,7 +2716,7 @@ function MainApp() {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-300 mb-1 font-bold">Новая ставка (руб/час)</label>
+                <label className="block text-slate-300 mb-1 font-bold">{lang === 'RU' ? 'Новая ставка (сом/час)' : 'Жаңы ставка (сом/саат)'}</label>
                 <input
                   required
                   type="number"
@@ -2812,7 +2883,7 @@ function MainApp() {
                     </div>
                     <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Расход</span>
-                      <span className="text-sm font-extrabold text-white block tabular-nums">{consumptionRate} л/100км</span>
+                      <span className="text-sm font-extrabold text-white block tabular-nums">{consumptionRate} л/ч</span>
                     </div>
                     <div className="p-3 bg-[#00091b]/40 border border-[#00417d]/30 rounded-xl space-y-1">
                       <span className="text-[10px] text-[#64748b] font-bold block uppercase tracking-wider">Скорость</span>
@@ -2903,7 +2974,7 @@ function MainApp() {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-white">{selectedDriver.name}</h3>
-                    <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">ВУ тракториста: {selectedDriver.licenseNumber}</span>
+                    <span className="text-xs text-[#94a3b8] font-bold block mt-0.5">{lang === "RU" ? "Номер ВУ" : "Күбөлүктүн номери"}: {selectedDriver.licenseNumber}</span>
                   </div>
                 </div>
                 <button onClick={() => setSelectedDriver(null)} className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-[#0c1e43] cursor-pointer">
@@ -2998,7 +3069,7 @@ function MainApp() {
                           <span className="block font-bold text-white text-xs">{hist.reason}</span>
                           <span className="text-[10px] text-[#64748b] block font-mono">{hist.date}</span>
                         </div>
-                        <span className="text-[#eab308] font-extrabold text-sm whitespace-nowrap">{hist.rate} ₽/ч</span>
+                        <span className="text-[#eab308] font-extrabold text-sm whitespace-nowrap">{hist.rate} сом/ч</span>
                       </div>
                     )) || <span className="text-slate-400 text-xs">—</span>}
                   </div>
@@ -3125,7 +3196,7 @@ function MainApp() {
                   >
                     <option value="СТС">СТС спецтехники</option>
                     <option value="ПТС">ПТС спецтехники</option>
-                    <option value="Ростехнадзор">Разрешение Ростехнадзора</option>
+                    <option value="Ростехнадзор">{lang === "RU" ? "Разрешение Госгортехнадзора КР" : "КР Мамтоосуу көзөмөлүнүн уруксаты"}</option>
                     <option value="ОСАГО">Полис ОСАГО</option>
                     <option value="Другое">Другой документ</option>
                   </select>
