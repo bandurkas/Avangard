@@ -190,7 +190,7 @@ function MainApp() {
     return coords[id] || { top: "22%", left: "72%" };
   };
 
-  const [isLight, setIsLight] = useState(false);
+  const [isLight, setIsLight] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "vehicles" | "objects" | "payroll">("overview");
   const queryClient = useQueryClient();
 
@@ -773,7 +773,7 @@ function MainApp() {
       )}
 
       {/* Main Dispatcher Dashboard Area (72% standard) */}
-      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r border-[#00417d]/30 bg-[#00091b]">
+      <div className={`flex-1 flex flex-col p-4 sm:p-6 lg:p-8 lg:max-w-[72%] w-full min-h-screen border-b lg:border-b-0 lg:border-r transition-colors duration-300 ${isLight ? "bg-[#f8fafc] border-slate-200" : "bg-[#00091b] border-[#00417d]/30"}`}>
         
         {/* Workspace Brand and Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -784,11 +784,11 @@ function MainApp() {
                 {/* Official Avangard Progress Logo */}
                 <div className="relative flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-[1.03]">
                   <img
-                    src="/logo.png"
-                    className="h-16 w-auto object-contain select-none drop-shadow-lg"
+                    src={isLight ? "/logo.png" : "/logo_white.png"}
+                    className="h-16 w-auto object-contain select-none drop-shadow-lg transition-all"
                     alt="Avangard Progress"
                     draggable={false}
-                    style={{ maxWidth: '300px', display: 'block', filter: 'drop-shadow(0 2px 12px rgba(56,166,228,0.25))' }}
+                    style={{ maxWidth: '300px', display: 'block', filter: isLight ? 'drop-shadow(0 2px 12px rgba(56,166,228,0.25))' : 'drop-shadow(0 2px 12px rgba(255,255,255,0.1))' }}
                   />
                 </div>
               </div>
