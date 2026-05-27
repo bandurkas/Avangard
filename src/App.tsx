@@ -1027,7 +1027,7 @@ function MainApp() {
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-3xl font-extrabold tracking-tight">{getAverageFuelConsumption()} <span className="text-sm font-normal text-[#94a3b8]">л/ч</span></h3>
+                  <h3 className="text-3xl font-extrabold tracking-tight">{getAverageFuelConsumption()}</h3>
                 </div>
               </div>
               {/* Card 4 */}
