@@ -779,9 +779,23 @@ function MainApp() {
             <div className="flex items-center gap-3">
               
               <div className="flex items-center gap-3">
-                {/* Official Avangard Progress Logo Banner */}
-                <div className="bg-white/95 p-2 px-4 rounded-2xl border border-slate-200/50 shadow-lg flex items-center justify-center shrink-0 h-24 mt-0.5">
-                  <img src="/logo.png" className="h-20 w-auto object-contain" alt="Avangard Progress Logo" />
+                {/* Official Avangard Progress Logo — Premium Frosted Glass Pill */}
+                <div className="relative flex items-center shrink-0">
+                  <div
+                    className="flex items-center bg-white rounded-2xl px-5 py-2.5 transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      boxShadow: '0 2px 20px rgba(56,166,228,0.20), 0 1px 6px rgba(0,9,27,0.22)',
+                      border: '1px solid rgba(255,255,255,0.70)',
+                    }}
+                  >
+                    <img
+                      src="/logo_white.png"
+                      className="h-10 w-auto object-contain select-none"
+                      alt="Avangard Progress"
+                      draggable={false}
+                      style={{ maxWidth: '200px', display: 'block' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1987,8 +2001,13 @@ function MainApp() {
             {/* Simulator Mobile App Header */}
             <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-2 shrink-0">
               <div className="flex items-center gap-2 h-full">
-                <img src="/logo.png" className="h-8 w-auto object-contain" alt="Avangard Progress Logo" />
-                <span className="font-extrabold text-sm text-slate-800 tracking-tight">{t.vanguardProgress}</span>
+                <img
+                  src="/logo_white.png"
+                  className="h-7 w-auto object-contain select-none"
+                  alt="Avangard Progress"
+                  draggable={false}
+                  style={{ maxWidth: '130px' }}
+                />
               </div>
             </header>
 
