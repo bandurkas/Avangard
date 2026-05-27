@@ -135,7 +135,7 @@ function MainApp() {
       createObject: "Создать объект",
       issueDecree: "Добавить Приказ",
       issueDecreeBtn: "Добавить Приказ",
-      systemTitle: "Система управления спецтехникой, объектами и Учет • Кыргызстан",
+      systemTitle: "Система управления спецтехникой, объектами и Учет",
       activeMachineryHeader: "Активная спецтехника на объекте",
       noMachinery: "Спецтехника в смене отсутствует",
       notifications: "Уведомления",
