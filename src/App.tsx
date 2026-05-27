@@ -707,18 +707,9 @@ function MainApp() {
             <div className="flex items-center gap-3">
               <span className="bg-[#eab308] text-slate-950 px-2 py-0.5 text-[10px] font-black rounded shadow-md uppercase tracking-wider">ERP V2.0 PRO</span>
               <div className="flex items-center gap-3">
-                {/* Authentic Avangard logo styled SVG */}
-                <svg className="w-9 h-9 text-[#38a6e4]" viewBox="0 0 100 100" fill="currentColor">
-                  {/* Outer 'A' geometry */}
-                  <polygon points="50,10 12,90 40,90 50,68 60,90 88,90" fill="#00417D" />
-                  {/* Dynamic brand lightning slash */}
-                  <polygon points="5,82 95,25 90,15 0,72" fill="#38a6e4" />
-                </svg>
-                <div>
-                  <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-1.5 font-['Montserrat']">
-                    AVANGARD <span className="text-[#38a6e4] font-medium text-lg uppercase tracking-widest">Style</span>
-                  </h1>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#eab308] block -mt-1 font-mono">Specialized Machinery ERP</span>
+                {/* Official Avangard Progress Logo Banner */}
+                <div className="bg-white/95 p-1 px-2 rounded-xl border border-slate-200/50 shadow-md flex items-center justify-center shrink-0 h-10 mt-0.5">
+                  <img src="/logo.png" className="h-7 w-auto object-contain" alt="Avangard Progress Logo" />
                 </div>
               </div>
             </div>
