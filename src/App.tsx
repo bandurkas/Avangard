@@ -30,7 +30,9 @@ import {
   AlertTriangle,
   FileSignature,
   CheckCircle,
-  Map
+  Map,
+  Calendar,
+  Eye
 } from "lucide-react";
 
 // Preset GPS routing path centered around Bishkek and mountainous areas
@@ -159,6 +161,8 @@ function MainApp() {
   const [driverFilter, setDriverFilter] = useState("");
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [objectSearch, setObjectSearch] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("ALL");
 
   // CRUD Modals State
   const [driverModalOpen, setDriverModalOpen] = useState(false);
@@ -850,7 +854,7 @@ function MainApp() {
             }`}
           >
             <Wallet className="w-4 h-4" />
-            Учёт Payroll & Приказы
+            Учет
           </button>
         </div>
 
@@ -1613,47 +1617,131 @@ function MainApp() {
 
               </div>
 
-              {/* Active Wage Decrees Timeline (V2) */}
+              {/* Active Wage Decrees Timeline (V2) -> Upgraded to high-density grid for large number of records */}
               <div className="bg-[#0c1e43]/90 border border-[#00417d]/30 rounded-xl p-5 space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h3 className="font-extrabold text-sm tracking-wide text-white flex items-center gap-2">
                     <FileSignature className="w-4 h-4 text-[#38a6e4]" />
-                    Журнал Приказов об установлении ставок
+                    Реестр Приказов об установлении ставок
                   </h3>
                   <button 
                     onClick={() => {
                       setOrderForm({ driverId: drivers[0]?.id || "", orderNumber: `П-${Math.floor(100 + Math.random() * 900)}`, dateEffective: new Date().toISOString().split('T')[0], newRate: 850 });
                       setOrderModalOpen(true);
                     }}
-                    className="h-8 px-3 bg-[#00091b] hover:bg-[#0c1e43] text-[#38a6e4] text-xs font-bold rounded-lg border border-[#00417d]/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="h-9 px-4 bg-[#38a6e4] hover:bg-[#208bc9] text-white text-xs font-bold rounded-xl shadow-lg transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Инициализировать приказ
+                    <Plus className="w-3.5 h-3.5 text-white" /> Инициализировать приказ
                   </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {orders.map(ord => (
-                    <div key={ord.id} className="p-4 bg-[#00091b]/60 rounded-xl border border-[#00417d]/30 flex justify-between items-start gap-4">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-[#0c1e43] text-slate-300 font-mono px-2 py-0.5 rounded font-extrabold">Приказ №{ord.orderNumber}</span>
-                          <span className="text-[10px] text-[#64748b] font-bold">Срок: {ord.dateEffective}</span>
-                        </div>
-                        <h4 className="font-extrabold text-sm text-white">{ord.driverName}</h4>
-                        <p className="text-xs text-[#94a3b8]">Ставка пересматривается: <span className="line-through text-slate-500">{ord.oldRate}</span> → <span className="font-bold text-[#38a6e4]">{ord.newRate} ₽/ч</span></p>
-                      </div>
-                      <div>
-                        {ord.status === "SIGNED" ? (
-                          <span className="inline-flex items-center gap-1 bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase">
-                            <CheckCircle className="w-3.5 h-3.5" /> Подписан
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase animate-pulse">
-                            Ожидает подписи в приложении
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+
+                {/* Filter and Search Controls for Orders */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <div className="flex-1 relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input 
+                      type="text"
+                      placeholder="Поиск по сотруднику или номеру приказа..."
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      className="w-full h-9 pl-9 pr-4 bg-[#00091b] border border-[#00417d]/30 rounded-xl focus:border-[#38a6e4] outline-none text-xs font-semibold text-white placeholder-slate-500"
+                    />
+                  </div>
+                  <select 
+                    value={orderStatusFilter}
+                    onChange={(e) => setOrderStatusFilter(e.target.value)}
+                    className="h-9 px-3 bg-[#00091b] border border-[#00417d]/30 rounded-xl focus:border-[#38a6e4] outline-none text-xs font-semibold cursor-pointer text-white sm:w-48"
+                  >
+                    <option value="ALL">Все статусы</option>
+                    <option value="SIGNED">Подписан</option>
+                    <option value="PENDING">Ожидает подписи</option>
+                  </select>
+                </div>
+
+                {/* Grid Spreadsheet of Decrees */}
+                <div className="border border-[#00417d]/30 rounded-xl overflow-hidden bg-[#00091b]/40">
+                  <div className="max-h-[320px] overflow-y-auto overflow-x-auto scrollbar-thin">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#00417d]/30 bg-[#00091b]/80 text-[#94a3b8] text-[11px] font-extrabold uppercase tracking-wider sticky top-0 z-10">
+                          <th className="p-3">Номер приказа</th>
+                          <th className="p-3">Сотрудник</th>
+                          <th className="p-3">Срок действия</th>
+                          <th className="p-3">Тарифная сетка</th>
+                          <th className="p-3">Статус</th>
+                          <th className="p-3 text-right">Действия</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#334155] text-xs font-semibold">
+                        {(() => {
+                          const filteredOrders = orders.filter(ord => {
+                            const matchSearch = ord.driverName.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                                                ord.orderNumber.toLowerCase().includes(orderSearch.toLowerCase());
+                            const matchStatus = orderStatusFilter === "ALL" || 
+                                                (orderStatusFilter === "SIGNED" && ord.status === "SIGNED") ||
+                                                (orderStatusFilter === "PENDING" && ord.status !== "SIGNED");
+                            return matchSearch && matchStatus;
+                          });
+
+                          if (filteredOrders.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={6} className="p-8 text-center text-[#64748b] font-bold">
+                                  Приказы не найдены
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return filteredOrders.map(ord => (
+                            <tr key={ord.id} className="hover:bg-[#0c1e43]/40 transition-colors">
+                              <td className="p-3 font-mono">
+                                <span className="inline-flex items-center bg-[#0c1e43] text-[#38a6e4] border border-[#38a6e4]/20 px-2 py-0.5 rounded text-[10px] font-extrabold">
+                                  №{ord.orderNumber}
+                                </span>
+                              </td>
+                              <td className="p-3 text-white font-extrabold">{ord.driverName}</td>
+                              <td className="p-3 text-slate-300 font-mono">
+                                <span className="inline-flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-[#38a6e4]" />
+                                  {ord.dateEffective}
+                                </span>
+                              </td>
+                              <td className="p-3 text-slate-300">
+                                <span className="line-through text-slate-500 mr-1.5">{ord.oldRate}</span>
+                                <span className="text-[#38a6e4] font-black">{ord.newRate} ₽/ч</span>
+                              </td>
+                              <td className="p-3">
+                                {ord.status === "SIGNED" ? (
+                                  <span className="inline-flex items-center gap-1 bg-[#10b981]/15 text-[#10b981] border border-[#10b981]/20 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase">
+                                    <CheckCircle className="w-3 h-3 text-[#10b981]" /> Подписан
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase animate-pulse">
+                                    Ожидает подписи
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveViewDoc({
+                                    name: `Приказ №${ord.orderNumber} о пересмотре тарифной ставки`,
+                                    file: `order-${ord.orderNumber.toLowerCase()}-signed.pdf`,
+                                    type: `Приказ об установлении тарифа водителя ${ord.driverName} (${ord.newRate} ₽/ч)`
+                                  })}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] bg-[#0c1e43] hover:bg-[#38a6e4] text-[#38a6e4] hover:text-white border border-[#38a6e4]/30 rounded-lg font-bold transition-all cursor-pointer shadow-sm active:scale-95 text-inverted"
+                                  title="Открыть и просмотреть приказ"
+                                >
+                                  <Eye className="w-3.5 h-3.5" /> Просмотреть
+                                </button>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
