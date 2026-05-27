@@ -791,8 +791,8 @@ function MainApp() {
                     }}
                   >
                     <img
-                      src="/logo_white.png"
-                      className="h-10 w-auto object-contain select-none"
+                      src="/logo.png"
+                      className="h-20 w-auto object-contain select-none"
                       alt="Avangard Progress"
                       draggable={false}
                       style={{ maxWidth: '200px', display: 'block' }}
@@ -2011,8 +2011,8 @@ function MainApp() {
             <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 pt-2 shrink-0">
               <div className="flex items-center gap-2 h-full">
                 <img
-                  src="/logo_white.png"
-                  className="h-7 w-auto object-contain select-none"
+                  src="/logo.png"
+                  className="h-14 w-auto object-contain select-none"
                   alt="Avangard Progress"
                   draggable={false}
                   style={{ maxWidth: '130px' }}
