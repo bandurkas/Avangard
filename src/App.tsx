@@ -1837,7 +1837,6 @@ function MainApp() {
                         <th className="p-4 w-[22%]">{lang === "RU" ? "Сотрудник" : "Кызматкер"}</th>
                         <th className="p-4 w-[20%]">{lang === "RU" ? "Объект (Коэфф.)" : "Объект (Коэфф.)"}</th>
                         <th className="p-4 w-[20%]">{lang === "RU" ? "Движение / Простой" : "Иштөө / Простой"}</th>
-                        <th className="p-4 w-[10%]">{lang === "RU" ? "Ставка" : "Ставка"}</th>
                         <th className="p-4 w-[10%]">{lang === "RU" ? "Штраф / Премия" : "Корректировка"}</th>
                         <th className="p-4 w-[10%] text-right">{lang === "RU" ? "Итого" : "Жалпы"}</th>
                         <th className="p-4 w-[8%] text-center">{lang === "RU" ? "Статус" : "Статус"}</th>
@@ -1883,9 +1882,6 @@ function MainApp() {
                             <td className="p-4 font-mono">
                               <span className="text-white font-extrabold">{actH.toFixed(1)} ч</span>
                               <span className="text-slate-500 text-[10px] font-medium block">Простой: {idlH.toFixed(1)} ч</span>
-                            </td>
-                            <td className="p-4 text-white font-bold font-mono">
-                              {rate} сом/ч
                             </td>
                             <td className="p-4">
                               <input 
