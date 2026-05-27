@@ -114,6 +114,7 @@ interface TimeLog {
 }
 
 function MainApp() {
+  const [isLight, setIsLight] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "drivers" | "vehicles" | "objects" | "payroll">("overview");
   const queryClient = useQueryClient();
 
@@ -681,7 +682,7 @@ function MainApp() {
   };
 
   return (
-    <div className="bg-[#00091b] text-[#f8fafc] font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full selection:bg-[#38a6e4] selection:text-white">
+    <div className={`font-sans min-h-screen flex flex-col lg:flex-row overflow-x-hidden w-full selection:bg-[#38a6e4] selection:text-white transition-colors duration-300 ${isLight ? 'light-theme bg-[#f8fafc] text-[#0b1327]' : 'dark-theme bg-[#00091b] text-[#f8fafc]'}`}>
       
       {/* Dynamic Toast Alerts */}
       {alertMsg && (
@@ -719,7 +720,24 @@ function MainApp() {
             </div>
             <p className="text-xs text-[#94a3b8] mt-1.5 font-semibold pl-1">Центральная система управления спецтехникой, объектами и Payroll • Кыргызстан</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Dynamic Theme Switcher */}
+            <button
+              type="button"
+              onClick={() => setIsLight(!isLight)}
+              className="h-10 w-10 bg-[#0c1e43] hover:bg-[#38a6e4]/20 border border-[#00417d]/30 text-white rounded-xl flex items-center justify-center cursor-pointer shadow-lg hover:shadow-md transition-all active:scale-95 shrink-0"
+              title="Переключить тему оформления"
+            >
+              {isLight ? (
+                <svg className="w-5 h-5 text-[#eab308]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-[#38a6e4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
             {(activeTab === "drivers" || activeTab === "vehicles" || activeTab === "objects" || activeTab === "payroll") && (
               <button 
                 onClick={() => {
